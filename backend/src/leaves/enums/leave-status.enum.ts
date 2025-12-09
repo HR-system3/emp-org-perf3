@@ -1,0 +1,7 @@
+export enum LeaveStatus {
+  PENDING = "PENDING",
+  UNDER_REVIEW = "UNDER_REVIEW",   // <--- ADD THIS
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+  CANCELLED = "CANCELLED",
+}
