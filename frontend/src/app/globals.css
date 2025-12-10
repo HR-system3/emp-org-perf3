@@ -1,26 +1,236 @@
-@import "tailwindcss";
+/* --------- GLOBAL THEME --------- */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-body: #020617;          /* dark navy */
+  --bg-card: #020617;
+  --bg-card-soft: #020617;
+  --border-subtle: #1f2937;
+  --border-strong: #4b5563;
+  --text-main: #e5e7eb;
+  --text-muted: #9ca3af;
+  --accent: #2563eb;
+  --accent-soft: #1d4ed8;
+  --danger: #ef4444;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color:#c6edf8;
+  color: var(--text-main);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+/* --------- LAYOUT HELPERS --------- */
+
+main.page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 3rem 1rem;
+}
+
+.card {
+  width: 100%;
+  max-width: 960px;
+  background: radial-gradient(circle at top, #111827 0, #020617 55%);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  padding: 2rem 2.5rem;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55);
+}
+
+/* --------- TYPOGRAPHY --------- */
+
+h1,
+h2,
+h3 {
+  margin: 0 0 0.75rem;
+}
+
+h1 {
+  font-size: 1.9rem;
+}
+
+h2 {
+  font-size: 1.3rem;
+}
+
+p {
+  margin: 0.25rem 0;
+}
+
+.text-muted {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* --------- FORM ELEMENTS --------- */
+
+form {
+  margin-top: 1.5rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem 1.5rem;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+input,
+select,
+textarea {
+  background-color: #020617;              /* dark but distinct from bg */
+  color: var(--text-main);
+  border-radius: 0.45rem;
+  border: 1px solid var(--border-strong);
+  padding: 0.45rem 0.65rem;
+  font-size: 0.95rem;
+  width: 100%;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+/* inline inputs (e.g. manager id box) */
+.inline-input {
+  max-width: 320px;
+}
+
+/* --------- BUTTONS --------- */
+
+button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.4rem 1.1rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+  color: white;
+  font-weight: 500;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5);
+  transition: transform 0.08s ease-out, box-shadow 0.08s ease-out,
+    background 0.08s ease-out;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.6);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+  box-shadow: none;
+}
+
+button.secondary {
+  background: #111827;
+  box-shadow: 0 0 0 1px var(--border-strong);
+}
+
+/* --------- LINKS --------- */
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* --------- LIST MENU --------- */
+
+.link-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+}
+
+.link-list li + li {
+  margin-top: 0.4rem;
+}
+
+/* --------- RESULT BLOCKS --------- */
+
+.result-block {
+  margin-top: 1.75rem;
+  padding: 1.1rem 1.2rem;
+  border-radius: var(--radius-md);
+  background: #020617;
+  border: 1px solid var(--border-strong);
+  max-height: 360px;
+  overflow: auto;
+}
+
+pre {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  font-size: 0.85rem;
+  color: #bbf7d0;
+}
+
+/* --------- TABLES (change requests, team view) --------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+th,
+td {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+th {
+  text-align: left;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* --------- MESSAGES --------- */
+
+.error {
+  color: var(--danger);
+  margin-top: 0.75rem;
+}
+
+.success {
+  color: #4ade80;
+  margin-top: 0.75rem;
 }

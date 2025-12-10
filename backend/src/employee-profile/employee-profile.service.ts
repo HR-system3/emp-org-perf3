@@ -45,32 +45,37 @@ export class EmployeeProfileService {
   // EMPLOYEE PROFILE CRUD
   // ---------------------------------------------------------------------------
 
-  async createEmployeeProfile(
-    dto: CreateEmployeeProfileDto,
-  ): Promise<EmployeeProfile> {
-    const doc = new this.employeeProfileModel({
-      // ⚠️ IMPORTANT: dto has `employeeCode`, not `employeeNumber`
-      employeeNumber: dto.employeeNumber,
-      dateOfHire: dto.dateOfHire,
+  // employee-profile.service.ts
 
-      // Base user fields – these live on UserProfileBase
-      firstName: dto.firstName,
-      lastName: dto.lastName,
-      nationalId: dto.nationalId,
-      personalEmail: dto.email,
-      mobilePhone: dto.phone,
-      dateOfBirth: dto.dateOfBirth,
+async createEmployeeProfile(
+  dto: CreateEmployeeProfileDto,
+): Promise<EmployeeProfile> {
+  const docData: any = {
+    // Normalize employee number to avoid leading/trailing spaces
+    employeeNumber: dto.employeeNumber.trim(),
+    dateOfHire: dto.dateOfHire,
 
-      contractType: dto.contractType,
-      status: dto.status ?? EmployeeStatus.ACTIVE,
+    // Base user fields – these live on UserProfileBase
+    firstName: dto.firstName,
+    lastName: dto.lastName,
+    nationalId: dto.nationalId,
+    personalEmail: dto.email,
+    mobilePhone: dto.phone,
+    dateOfBirth: dto.dateOfBirth,
 
-      // Payroll link
-      payGradeId: dto.payGradeId,
-      // Org-structure links will be wired later (once you have IDs)
-    });
+    contractType: dto.contractType,
+    status: dto.status ?? EmployeeStatus.ACTIVE,
+  };
 
-    return doc.save();
+  // Only set payGradeId if a non-empty string was provided
+  if (dto.payGradeId && dto.payGradeId.trim() !== '') {
+    docData.payGradeId = dto.payGradeId.trim();
   }
+
+  const doc = new this.employeeProfileModel(docData);
+  return doc.save();
+}
+
 
   async getById(id: string): Promise<EmployeeProfile | null> {
     return this.employeeProfileModel
@@ -87,8 +92,10 @@ export class EmployeeProfileService {
   async getByEmployeeNumber(
     employeeNumber: string,
   ): Promise<EmployeeProfile | null> {
+    const normalized = employeeNumber.trim();
+  
     return this.employeeProfileModel
-      .findOne({ employeeNumber })
+      .findOne({ employeeNumber: normalized })
       .populate('primaryPositionId')
       .populate('primaryDepartmentId')
       .populate('payGradeId')
@@ -97,6 +104,7 @@ export class EmployeeProfileService {
       .populate('lastAppraisalTemplateId')
       .exec();
   }
+  
 
   async updateEmployeeProfile(
     id: string,
