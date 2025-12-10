@@ -15,7 +15,7 @@ import { LeavesSchedulerService } from '../leaves-scheduler.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
-import { Role } from '../../auth/roles.enum';
+import { Role } from '../../auth/enums/roles.enum';
 
 import { ApproveRejectLeaveDto } from '../dto/approve-reject-leave.dto';
 import { ConfigureLeaveTypeDto } from '../dto/configure-leave-type.dto';
