@@ -1,8 +1,9 @@
+import * as mongoose from 'mongoose';
 import { Module } from '@nestjs/common';
 import { PayrollConfigurationController } from './payroll-configuration.controller';
 import { PayrollConfigurationService } from './payroll-configuration.service';
 import { CompanyWideSettings, CompanyWideSettingsSchema } from './models/CompanyWideSettings.schema';
-import { MongooseModule } from '@nestjs/mongoose';
+import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 import { allowance, allowanceSchema } from './models/allowance.schema';
 import { insuranceBrackets, insuranceBracketsSchema } from './models/insuranceBrackets.schema';
 import { payrollPolicies, payrollPoliciesSchema } from './models/payrollPolicies.schema';
@@ -11,6 +12,7 @@ import { signingBonus, signingBonusSchema } from './models/signingBonus.schema';
 import { taxRules, taxRulesSchema } from './models/taxRules.schema';
 import { terminationAndResignationBenefits, terminationAndResignationBenefitsSchema } from './models/terminationAndResignationBenefits';
 import { payGrade } from './models/payGrades.schema';
+import { ApprovalModule } from './approval/approval.module'; // Ensure this is added if it was missing
 
 @Module({
   imports: [
@@ -25,9 +27,11 @@ import { payGrade } from './models/payGrades.schema';
       { name: CompanyWideSettings.name, schema: CompanyWideSettingsSchema },
       { name: payGrade.name, schema: payTypeSchema }
     ]),
+    ApprovalModule,
   ],
   controllers: [PayrollConfigurationController],
-  providers: [PayrollConfigurationService],
-  exports:[PayrollConfigurationService]
+  providers: [
+    PayrollConfigurationService,
+  ],
 })
-export class PayrollConfigurationModule { }
+export class PayrollConfigurationModule {}

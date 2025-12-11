@@ -1,5 +1,6 @@
 export enum ConfigStatus {
     DRAFT = 'draft',
+    PENDING_MANAGER_APPROVAL = 'pending_manager_approval',
     APPROVED = 'approved',
     REJECTED = 'rejected'
 }
