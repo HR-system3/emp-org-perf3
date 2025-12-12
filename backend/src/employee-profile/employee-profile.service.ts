@@ -2,6 +2,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { FilterQuery } from 'mongoose';
 
 import {
   EmployeeProfile,
@@ -268,5 +269,26 @@ async createEmployeeProfile(
     }
 
     return accessProfile.save();
+  }
+
+  async findAll(search?: string) {
+    const filter: FilterQuery<EmployeeProfileDocument> = {};
+  
+    if (search && search.trim()) {
+      const regex = new RegExp(search.trim(), 'i'); // case-insensitive
+  
+      filter.$or = [
+        { firstName: regex },
+        { lastName: regex },
+        { employeeNumber: regex },
+        { status: regex },
+      ];
+    }
+  
+    return this.employeeProfileModel
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .limit(200)
+      .exec();
   }
 }

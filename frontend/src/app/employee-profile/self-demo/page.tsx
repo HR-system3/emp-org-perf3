@@ -1,6 +1,8 @@
+// ./src/app/employee-profile/self-demo/page.tsx
+
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "@/lib/axios";
 import {
   EmployeeProfile,
@@ -17,6 +19,12 @@ export default function SelfServiceProfileDemoPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!message) return;
+    const id = setTimeout(() => setMessage(null), 3000);
+    return () => clearTimeout(id);
+  }, [message]);
 
   async function loadProfile() {
     if (!employeeId) return;
@@ -106,8 +114,11 @@ export default function SelfServiceProfileDemoPage() {
         </p>
       )}
       {message && (
-        <p style={{ color: "green", marginTop: "1rem" }}>{message}</p>
-      )}
+        <div className="toast">
+          <span>✅</span>
+          <span>{message}</span>
+        </div>
+        )}
 
       {profile && (
         <form

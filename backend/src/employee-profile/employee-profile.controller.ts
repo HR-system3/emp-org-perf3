@@ -125,5 +125,10 @@ import {
     ) {
       return this.employeeProfileService.assignRoles(employeeProfileId, dto);
     }
+
+    @Get()
+    async listEmployees(@Query('search') search?: string) {
+      return this.employeeProfileService.findAll(search);
+    }
   }
   

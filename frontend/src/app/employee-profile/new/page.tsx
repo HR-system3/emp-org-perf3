@@ -1,6 +1,8 @@
+// src/app/employee-profile/new/page.tsx
+
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import api from "@/lib/axios";
 import {
@@ -12,7 +14,6 @@ import {
   MaritalStatus,
 } from "@/types/employeeProfile";
 import BackButton from "@/components/BackButton";
-
 
 const contractTypes: ContractType[] = [
   "FULL_TIME_CONTRACT",
@@ -62,6 +63,16 @@ export default function CreateEmployeePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 🔔 toast message
+  const [toast, setToast] = useState<string | null>(null);
+
+  // Auto-hide toast after 3 seconds
+  useEffect(() => {
+    if (!toast) return;
+    const id = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(id);
+  }, [toast]);
+
   function handleChange(
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) {
@@ -82,9 +93,7 @@ export default function CreateEmployeePage() {
       const payload = {
         ...form,
         employeeNumber: form.employeeNumber.trim(),
-        payGradeId: form.payGradeId
-          ? form.payGradeId.trim()
-          : undefined,
+        payGradeId: form.payGradeId ? form.payGradeId.trim() : undefined,
         dateOfBirth: new Date(form.dateOfBirth).toISOString(),
         dateOfHire: new Date(form.dateOfHire).toISOString(),
       };
@@ -94,6 +103,7 @@ export default function CreateEmployeePage() {
         payload
       );
       setResult(res.data);
+      setToast("Employee created successfully.");
     } catch (err: any) {
       console.error(err);
       const backendMessage =
@@ -114,7 +124,7 @@ export default function CreateEmployeePage() {
   return (
     <main className="page">
       <div className="card">
-      <BackButton />
+        <BackButton />
         <header style={{ marginBottom: "1.25rem" }}>
           <h1>Create Employee Profile (HR)</h1>
           <p className="text-muted">
@@ -359,8 +369,6 @@ export default function CreateEmployeePage() {
             <button type="submit" disabled={loading}>
               {loading ? "Creating..." : "Create Employee"}
             </button>
-            <a href="/" className="text-muted">
-            </a>
           </div>
         </form>
 
@@ -371,6 +379,14 @@ export default function CreateEmployeePage() {
           </div>
         )}
       </div>
+
+      {/* Toast */}
+      {toast && (
+        <div className="toast">
+          <span>✅</span>
+          <span>{toast}</span>
+        </div>
+      )}
     </main>
   );
 }

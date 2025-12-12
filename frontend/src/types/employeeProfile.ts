@@ -1,3 +1,5 @@
+// ./src/types/employeeProfile.ts
+
 export type Gender = 'MALE' | 'FEMALE';
 
 export type MaritalStatus =
