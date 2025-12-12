@@ -1,172 +1,183 @@
+// ./src/app/page.tsx
+
 "use client";
 
 import Link from "next/link";
 
-const pageStyle: React.CSSProperties = {
-  minHeight: "100vh",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "2rem",
-};
-
-const cardStyle: React.CSSProperties = {
-  maxWidth: "860px",
-  width: "100%",
-  background:
-    "radial-gradient(circle at top left, rgba(56,189,248,0.15), transparent 55%), rgba(3,7,18,0.98)",
-  borderRadius: "18px",
-  border: "1px solid rgba(148,163,184,0.35)",
-  padding: "2.5rem 2.25rem",
-  boxShadow: "0 25px 50px rgba(15,23,42,0.9)",
-};
-
-const titleStyle: React.CSSProperties = {
-  fontSize: "1.9rem",
-  fontWeight: 700,
-  color: "#e5f2ff",
-  marginBottom: "0.4rem",
-};
-
-const subtitleStyle: React.CSSProperties = {
-  fontSize: "0.9rem",
-  color: "#cbd5f5",
-  maxWidth: "640px",
-};
-
-const listStyle: React.CSSProperties = {
-  listStyle: "none",
-  padding: 0,
-  margin: "1.8rem 0 0",
-  display: "flex",
-  flexDirection: "column",
-  gap: "0.9rem",
-};
-
-const itemTitleStyle: React.CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "0.45rem",
-  fontSize: "0.95rem",
-  fontWeight: 600,
-  color: "#3b82f6", // link blue
-  textDecoration: "none",
-};
-
-const bulletStyle: React.CSSProperties = {
-  fontSize: "0.9rem",
-};
-
-const itemDescStyle: React.CSSProperties = {
-  fontSize: "0.8rem",
-  color: "#9ca3af",
-  marginLeft: "1.45rem",
-  marginTop: "0.15rem",
-};
-
-const footerStyle: React.CSSProperties = {
-  marginTop: "1.8rem",
-  fontSize: "0.78rem",
-  color: "#9ca3af",
-  maxWidth: "640px",
-};
-
-export default function EmployeeProfileHomePage() {
+export default function HrSystemHomePage() {
   return (
-    <main style={pageStyle}>
-      <section style={cardStyle}>
-        <h1 style={titleStyle}>Employee Profile – Frontend Sandbox</h1>
-        <p style={subtitleStyle}>
-          Choose one of the flows below to demo the Employee Profile subsystem.
-          HR users create and maintain profiles, while employees and managers
-          use self-service screens.
-        </p>
+    <main
+      className="page"
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <section
+        className="card"
+        style={{
+          width: "min(1100px, 100%)",
+          background:
+            "radial-gradient(circle at top left, rgba(255,255,255,0.06), transparent 55%) #050816",
+          borderRadius: "24px",
+          padding: "2.4rem 2.8rem",
+          boxShadow: "0 32px 60px rgba(0,0,0,0.6)",
+          border: "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
+        {/* HEADER */}
+        <header style={{ marginBottom: "1.8rem" }}>
+          <h1
+            style={{
+              fontSize: "2rem",
+              fontWeight: 700,
+              marginBottom: "0.4rem",
+            }}
+          >
+            HR System – Subsystems Overview
+          </h1>
+          <p className="text-muted" style={{ maxWidth: "680px" }}>
+            This dashboard lets you jump into each HR subsystem. Each subsystem
+            has its own frontend sandbox and APIs. For now, only{" "}
+            <strong>Employee Profile</strong> is implemented in the frontend.
+          </p>
+        </header>
 
-        <ul style={listStyle}>
-          <li>
-            <Link href="/employee-profile/new" style={itemTitleStyle}>
-              <span style={bulletStyle}>➤</span>
-              <span>Create Employee Profile (HR)</span>
-            </Link>
-            <p style={itemDescStyle}>
-              HR creates a new employee master record with personal, contract,
-              and organizational information.
-            </p>
-          </li>
-
-          <li>
-            <Link
-              href="/employee-profile/search-by-number"
-              style={itemTitleStyle}
+        {/* GRID OF SUBSYSTEM CARDS */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            gap: "1.3rem",
+          }}
+        >
+          {/* EMPLOYEE PROFILE – ACTIVE CARD */}
+          <Link
+            href="/employee-profile"
+            style={{
+              borderRadius: "18px",
+              border: "1px solid rgba(96, 165, 250, 0.5)",
+              background: "rgba(15,23,42,0.95)",
+              padding: "1.2rem 1.3rem",
+              textDecoration: "none",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.45rem",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "0.78rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#93c5fd",
+              }}
             >
-              <span style={bulletStyle}>➤</span>
-              <span>Search Employee by Employee Number (HR)</span>
-            </Link>
-            <p style={itemDescStyle}>
-              Quickly look up an existing employee using their employee number
-              (e.g. EMP-0012) to view profile details.
-            </p>
-          </li>
-
-          <li>
-            <Link href="/employee-profile/self-demo" style={itemTitleStyle}>
-              <span style={bulletStyle}>➤</span>
-              <span>Self-Service Profile (Employee demo)</span>
-            </Link>
-            <p style={itemDescStyle}>
-              Simulates an employee viewing and editing their own profile by
-              loading a profile using its MongoDB ID.
-            </p>
-          </li>
-
-          <li>
-            <Link
-              href="/employee-profile/change-requests"
-              style={itemTitleStyle}
+              Subsystem
+            </span>
+            <h2
+              style={{
+                fontSize: "1.15rem",
+                fontWeight: 700,
+                margin: 0,
+              }}
             >
-              <span style={bulletStyle}>➤</span>
-              <span>List Change Requests (HR)</span>
-            </Link>
-            <p style={itemDescStyle}>
-              Shows all submitted profile change requests filtered by status
-              (PENDING, APPROVED, REJECTED, etc.).
+              Employee Profile
+            </h2>
+            <p className="text-muted" style={{ fontSize: "0.9rem" }}>
+              Master employee records, self-service profile updates, profile
+              change requests, and manager team view.
             </p>
-          </li>
-
-          <li>
-            <Link
-              href="/employee-profile/change-requests/process-demo"
-              style={itemTitleStyle}
+            <div
+              style={{
+                marginTop: "0.3rem",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                fontSize: "0.85rem",
+                fontWeight: 600,
+                color: "#e5e7eb",
+              }}
             >
-              <span style={bulletStyle}>➤</span>
-              <span>Process Change Request (HR demo)</span>
-            </Link>
-            <p style={itemDescStyle}>
-              HR pastes a Request ID (ECR-...) and updates its status, optionally
-              applying approved changes to the profile.
-            </p>
-          </li>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 20,
+                  height: 20,
+                  borderRadius: "999px",
+                  background:
+                    "radial-gradient(circle at 30% 0%, #60a5fa, #1d4ed8)",
+                  fontSize: "0.75rem",
+                }}
+              >
+                →
+              </span>
+              Open Employee Profile sandbox
+            </div>
+          </Link>
 
-          <li>
-            <Link
-              href="/employee-profile/manager-team-demo"
-              style={itemTitleStyle}
+          {/* PLACEHOLDER CARDS FOR OTHER SUBSYSTEMS */}
+          {[
+            "Organization Structure",
+            "Recruitment",
+            "Time & Attendance",
+            "Leaves Management",
+            "Payroll",
+            "Performance Management",
+          ].map((name) => (
+            <div
+              key={name}
+              style={{
+                borderRadius: "18px",
+                border: "1px dashed rgba(148,163,184,0.6)",
+                background: "rgba(15,23,42,0.4)",
+                padding: "1.2rem 1.3rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.45rem",
+                opacity: 0.8,
+              }}
             >
-              <span style={bulletStyle}>➤</span>
-              <span>Manager Team View (demo)</span>
-            </Link>
-            <p style={itemDescStyle}>
-              Paste a manager&apos;s EmployeeProfile MongoDB ID to load their
-              direct reports and basic team information.
-            </p>
-          </li>
-        </ul>
-
-        <p style={footerStyle}>
-          For now, some demo screens ask you to paste MongoDB IDs manually. In a
-          real integrated system these values would come from the logged-in user
-          and from the Organization Structure subsystem.
-        </p>
+              <span
+                style={{
+                  fontSize: "0.78rem",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "#9ca3af",
+                }}
+              >
+                Subsystem (frontend not implemented)
+              </span>
+              <h2
+                style={{
+                  fontSize: "1.05rem",
+                  fontWeight: 600,
+                  margin: 0,
+                  color: "#e5e7eb",
+                }}
+              >
+                {name}
+              </h2>
+              <p className="text-muted" style={{ fontSize: "0.88rem" }}>
+                Backend APIs exist in the main HR system. A dedicated frontend
+                sandbox can be added later, similar to Employee Profile.
+              </p>
+              <span
+                style={{
+                  marginTop: "0.2rem",
+                  fontSize: "0.8rem",
+                  color: "#9ca3af",
+                }}
+              >
+                Coming soon
+              </span>
+            </div>
+          ))}
+        </div>
       </section>
     </main>
   );

@@ -1,3 +1,6 @@
+// ./src/app/employee-profile/change-requests/process/page.tsx
+
+
 "use client";
 
 import { useState, FormEvent } from "react";
@@ -7,6 +10,7 @@ import {
   ProfileChangeStatus,
 } from "@/types/employeeProfile";
 import BackButton from "@/components/BackButton";
+import StatusBadge from "@/components/StatusBadge";
 
 const statuses: ProfileChangeStatus[] = [
   "PENDING",
@@ -145,6 +149,10 @@ export default function ProcessChangeRequestPage() {
         {result && (
           <div className="result-block">
             <h2 style={{ marginBottom: "0.6rem" }}>Updated Request</h2>
+            <p style={{ marginBottom: "0.5rem" }}>
+              Status:{" "}
+              <StatusBadge kind="changeRequest" value={result.status} />
+            </p>
             <pre>{JSON.stringify(result, null, 2)}</pre>
           </div>
         )}
