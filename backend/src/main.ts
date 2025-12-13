@@ -12,7 +12,10 @@ async function bootstrap() {
 
   // CORS – allow frontend on 3000 or 3001 to call API with cookies
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:3001'],
+    origin: ['http://localhost:3000',
+             'http://localhost:3001',
+             "https://YOUR-VERCEL-URL.vercel.app"
+            ],
     credentials: true,
   });
 
