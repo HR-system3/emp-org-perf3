@@ -8,6 +8,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
 
+<<<<<<< HEAD
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
@@ -16,17 +17,34 @@ async function bootstrap() {
 
   app.enableCors({
     origin: (origin, cb) => {
+=======
+  // ✅ CORS (safe for dev + Vercel + Render)
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    process.env.FRONTEND_URL, // e.g. https://emp-org-perf3.vercel.app
+  ].filter(Boolean) as string[];
+
+  app.enableCors({
+    origin: (origin, cb) => {
+      // allow requests with no origin (Postman/curl/server-to-server)
+>>>>>>> 27192f4 (added the correct main.ts)
       if (!origin) return cb(null, true);
 
       const isAllowed =
         allowedOrigins.includes(origin) ||
+<<<<<<< HEAD
         origin.endsWith('.vercel.app');
+=======
+        origin.endsWith('.vercel.app'); // allow Vercel preview domains
+>>>>>>> 27192f4 (added the correct main.ts)
 
       return cb(isAllowed ? null : new Error('Not allowed by CORS'), isAllowed);
     },
     credentials: true,
   });
 
+  // --- SWAGGER SETUP ---
   const config = new DocumentBuilder()
     .setTitle('HR System API')
     .setDescription('HR System endpoints')
