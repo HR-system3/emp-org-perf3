@@ -4,7 +4,7 @@
 
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import api from "@/lib/axios";
+import {api} from "@/lib/axios";
 import {
   ChangeRequestCategory,
   EmployeeProfileChangeRequest,

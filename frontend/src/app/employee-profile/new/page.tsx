@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from "react";
 import type { ChangeEvent, FormEvent } from "react";
-import api from "@/lib/axios";
+import {api} from "@/lib/axios";
 import {
   ContractType,
   CreateEmployeeProfileDto,

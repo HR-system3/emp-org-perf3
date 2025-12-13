@@ -4,7 +4,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import api from "@/lib/axios";
+import {api} from "@/lib/axios";
 import {
   EmployeeProfileChangeRequest,
   ProfileChangeStatus,
