@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import api from "@/lib/axios";
+import {api} from "@/lib/axios";
 import BackButton from "@/components/BackButton";
 import Avatar from "@/components/Avatar";
 import StatusBadge from "@/components/StatusBadge";

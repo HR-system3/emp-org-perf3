@@ -3,7 +3,7 @@
 "use client";
 
 import { useState } from "react";
-import api from "@/lib/axios";
+import {api} from "@/lib/axios";
 import { EmployeeProfile } from "@/types/employeeProfile";
 import BackButton from "@/components/BackButton";
 import Avatar from "@/components/Avatar";
