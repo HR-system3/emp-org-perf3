@@ -466,43 +466,53 @@ private async createAuditLog(
   }
 
   async delimitPosition(
-    id: string,
-    dto: DelimitPositionDto,
-    requestedBy?: string,
-  ): Promise<PositionDocument> {
-    // BR-12: Check for historical assignments before delimiting
-    const assignments = await this.positionAssignmentModel
-      .find({ positionId: new Types.ObjectId(id) })
-      .exec();
+  id: string,
+  dto: DelimitPositionDto,
+  requestedBy?: string,
+): Promise<PositionDocument> {
+  // BR-12: Check for historical assignments before delimiting
+  const assignments = await this.positionAssignmentModel
+    .find({ positionId: new Types.ObjectId(id) })
+    .exec();
 
-    if (assignments.length > 0) {
-      // BR-12: Positions with history cannot be deleted, only delimited
-      // This is fine - we're delimiting, not deleting
-    }
-
-    const position = await this.getPositionById(id);
-    const beforeSnapshot = position.toObject();
-
-    // BR-37: Set effectiveEnd date for historical preservation
-    position.isActive = false;
-    position.status = PositionStatus.DELIMITED;
-    position.effectiveEnd = new Date(dto.effectiveEnd);
-
-    const saved = await position.save();
-
-    // BR-22: Audit log
-    await this.createAuditLog(
-      ChangeLogAction.DEACTIVATED,
-      'Position',
-      saved._id,
-      requestedBy,
-      beforeSnapshot as unknown as Record<string, unknown>,
-      saved.toObject() as unknown as Record<string, unknown>,
-      `Position ${position.positionId} delimited: ${dto.reason}`,
-    );
-
-    return saved;
+  if (assignments.length > 0) {
+    // BR-12: Positions with history cannot be deleted, only delimited
+    // This is fine — delimiting is allowed
   }
+
+  const position = await this.getPositionById(id);
+  const beforeSnapshot = position.toObject();
+
+  // ⚠️ IMPORTANT: Use $set to avoid removing other fields
+  // ⚠️ runValidators should be true to validate effectiveEnd
+  const saved = await this.positionModel.findByIdAndUpdate(
+    id,
+    {
+      $set: {
+        isActive: false,
+        status: PositionStatus.DELIMITED,
+        effectiveEnd: new Date(dto.effectiveEnd),
+      },
+    },
+    { new: true, runValidators: true } // runValidators MUST be true
+  );
+
+  if (!saved) throw new NotFoundException(`Position with ID ${id} not found`);
+
+  // BR-22: Audit log
+await this.createAuditLog(
+  ChangeLogAction.DEACTIVATED,
+  'Position',
+  saved._id,
+  requestedBy,
+  beforeSnapshot as unknown as Record<string, unknown>,
+  saved.toObject() as unknown as Record<string, unknown>,
+  `Position ${position.positionId} delimited: ${dto.reason}`,
+);
+
+  return saved;
+}
+
 
   // ==================== Change Request Workflow (REQ-OSM-03/04, BR-36) ====================
 
