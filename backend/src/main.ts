@@ -9,12 +9,28 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
-  // TEMP CORS (until frontend URL is known)
+  // ✅ CORS (safe for dev + Vercel + Render)
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    process.env.FRONTEND_URL, // e.g. https://emp-org-perf3.vercel.app
+  ].filter(Boolean) as string[];
+
   app.enableCors({
-    origin: true,          // ✅ allow any origin temporarily
-    credentials: true,     // ✅ required for cookies
+    origin: (origin, cb) => {
+      // allow requests with no origin (Postman/curl/server-to-server)
+      if (!origin) return cb(null, true);
+
+      const isAllowed =
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app'); // allow Vercel preview domains
+
+      return cb(isAllowed ? null : new Error('Not allowed by CORS'), isAllowed);
+    },
+    credentials: true,
   });
 
+  // --- SWAGGER SETUP ---
   const config = new DocumentBuilder()
     .setTitle('HR System API')
     .setDescription('HR System endpoints')
