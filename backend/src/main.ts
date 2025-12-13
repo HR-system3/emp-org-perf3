@@ -6,13 +6,25 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
   app.use(cookieParser());
 
-  // TEMP CORS (until frontend URL is known)
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    process.env.FRONTEND_URL, // ✅ this will be your Vercel URL
+  ].filter(Boolean);
+
   app.enableCors({
-    origin: true,          // ✅ allow any origin temporarily
-    credentials: true,     // ✅ required for cookies
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true);
+
+      const isAllowed =
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app');
+
+      return cb(isAllowed ? null : new Error('Not allowed by CORS'), isAllowed);
+    },
+    credentials: true,
   });
 
   const config = new DocumentBuilder()
@@ -28,6 +40,6 @@ async function bootstrap() {
   });
 
   const port = process.env.PORT || 3000;
-  await app.listen(port, '0.0.0.0'); // ✅ REQUIRED for Render
+  await app.listen(port, '0.0.0.0'); // ✅ good for Render
 }
 bootstrap();
