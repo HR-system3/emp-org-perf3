@@ -1,10 +1,12 @@
-import React from 'react';
-import LoginForm from '@/components/auth/LoginForm';
+// ./src/app/(auth)/login/page.tsx
+
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import LoginForm from "@/components/auth/LoginForm";
 
 export default function LoginPage() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <LoginForm />
-    </div>
-  );
+  const sp = useSearchParams();
+  const next = sp.get("next") || "/dashboard";
+  return <LoginForm redirectTo={next} />;
 }

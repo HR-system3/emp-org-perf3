@@ -1,26 +1,25 @@
-import React from 'react';
+//.src/components/common/Card.tsx
 
-interface CardProps {
-  children: React.ReactNode;
-  className?: string;
+"use client";
+
+export default function Card({
+  title,
+  subtitle,
+  children,
+}: {
   title?: string;
-  onClick?: () => void;
-}
-
-export default function Card({ children, className = '', title, onClick }: CardProps) {
+  subtitle?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div
-      className={`bg-white rounded-lg border border-gray-200 shadow-sm ${
-        onClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''
-      } ${className}`}
-      onClick={onClick}
-    >
-      {title && (
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+    <main className="page">
+      <div className="page-inner">
+        <div className="card">
+          {title && <div className="card-title">{title}</div>}
+          {subtitle && <div className="text-muted card-subtitle">{subtitle}</div>}
+          <div style={{ marginTop: 14 }}>{children}</div>
         </div>
-      )}
-      <div className="p-6">{children}</div>
-    </div>
+      </div>
+    </main>
   );
 }
