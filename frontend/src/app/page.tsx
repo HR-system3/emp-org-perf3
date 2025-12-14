@@ -8,166 +8,327 @@ const pageStyle: React.CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   padding: "2rem",
+  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+};
+
+const containerStyle: React.CSSProperties = {
+  maxWidth: "1200px",
+  width: "100%",
+};
+
+const headerStyle: React.CSSProperties = {
+  textAlign: "center",
+  marginBottom: "3rem",
+  color: "white",
+};
+
+const mainTitleStyle: React.CSSProperties = {
+  fontSize: "3rem",
+  fontWeight: 700,
+  marginBottom: "0.5rem",
+};
+
+const mainSubtitleStyle: React.CSSProperties = {
+  fontSize: "1.2rem",
+  opacity: 0.9,
+};
+
+const gridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(450px, 1fr))",
+  gap: "2rem",
 };
 
 const cardStyle: React.CSSProperties = {
-  maxWidth: "860px",
-  width: "100%",
-  background:
-    "radial-gradient(circle at top left, rgba(56,189,248,0.15), transparent 55%), rgba(3,7,18,0.98)",
+  background: "rgba(3,7,18,0.95)",
   borderRadius: "18px",
   border: "1px solid rgba(148,163,184,0.35)",
-  padding: "2.5rem 2.25rem",
+  padding: "2rem",
   boxShadow: "0 25px 50px rgba(15,23,42,0.9)",
 };
 
-const titleStyle: React.CSSProperties = {
-  fontSize: "1.9rem",
-  fontWeight: 700,
-  color: "#e5f2ff",
-  marginBottom: "0.4rem",
+const cardHeaderStyle: React.CSSProperties = {
+  marginBottom: "1.5rem",
+  textAlign: "center",
 };
 
-const subtitleStyle: React.CSSProperties = {
+const moduleIconStyle: React.CSSProperties = {
+  fontSize: "3.5rem",
+  marginBottom: "0.5rem",
+};
+
+const moduleTitleStyle: React.CSSProperties = {
+  fontSize: "1.8rem",
+  fontWeight: 700,
+  marginBottom: "0.5rem",
+};
+
+const orgTitleColor: React.CSSProperties = {
+  ...moduleTitleStyle,
+  color: "#3b82f6",
+};
+
+const empTitleColor: React.CSSProperties = {
+  ...moduleTitleStyle,
+  color: "#10b981",
+};
+
+const moduleDescStyle: React.CSSProperties = {
   fontSize: "0.9rem",
-  color: "#cbd5f5",
-  maxWidth: "640px",
+  color: "#cbd5e1",
 };
 
 const listStyle: React.CSSProperties = {
   listStyle: "none",
   padding: 0,
-  margin: "1.8rem 0 0",
+  margin: 0,
   display: "flex",
   flexDirection: "column",
-  gap: "0.9rem",
+  gap: "0.75rem",
 };
 
-const itemTitleStyle: React.CSSProperties = {
-  display: "inline-flex",
+const linkStyle: React.CSSProperties = {
+  display: "flex",
   alignItems: "center",
-  gap: "0.45rem",
-  fontSize: "0.95rem",
-  fontWeight: 600,
-  color: "#3b82f6", // link blue
+  gap: "0.5rem",
+  padding: "0.75rem 1rem",
+  background: "rgba(59,130,246,0.1)",
+  borderRadius: "8px",
+  color: "#3b82f6",
   textDecoration: "none",
-};
-
-const bulletStyle: React.CSSProperties = {
   fontSize: "0.9rem",
+  fontWeight: 600,
+  transition: "all 0.2s",
 };
 
-const itemDescStyle: React.CSSProperties = {
-  fontSize: "0.8rem",
+const empLinkStyle: React.CSSProperties = {
+  ...linkStyle,
+  background: "rgba(16,185,129,0.1)",
+  color: "#10b981",
+};
+
+const iconStyle: React.CSSProperties = {
+  fontSize: "1.2rem",
+};
+
+const descStyle: React.CSSProperties = {
+  fontSize: "0.75rem",
   color: "#9ca3af",
-  marginLeft: "1.45rem",
-  marginTop: "0.15rem",
+  marginLeft: "2rem",
+  marginTop: "0.25rem",
 };
 
-const footerStyle: React.CSSProperties = {
-  marginTop: "1.8rem",
-  fontSize: "0.78rem",
-  color: "#9ca3af",
-  maxWidth: "640px",
-};
-
-export default function EmployeeProfileHomePage() {
+export default function HomePage() {
   return (
     <main style={pageStyle}>
-      <section style={cardStyle}>
-        <h1 style={titleStyle}>Employee Profile – Frontend Sandbox</h1>
-        <p style={subtitleStyle}>
-          Choose one of the flows below to demo the Employee Profile subsystem.
-          HR users create and maintain profiles, while employees and managers
-          use self-service screens.
-        </p>
+      <div style={containerStyle}>
+        <header style={headerStyle}>
+          <h1 style={mainTitleStyle}>🏢 HR Management System</h1>
+          <p style={mainSubtitleStyle}>
+            Complete Employee Profile & Organization Structure Management
+          </p>
+        </header>
 
-        <ul style={listStyle}>
-          <li>
-            <Link href="/employee-profile/new" style={itemTitleStyle}>
-              <span style={bulletStyle}>➤</span>
-              <span>Create Employee Profile (HR)</span>
-            </Link>
-            <p style={itemDescStyle}>
-              HR creates a new employee master record with personal, contract,
-              and organizational information.
-            </p>
-          </li>
+        <div style={gridStyle}>
+          {/* Organization Structure Module */}
+          <section style={cardStyle}>
+            <div style={cardHeaderStyle}>
+              <div style={moduleIconStyle}>🏗️</div>
+              <h2 style={orgTitleColor}>Organization Structure</h2>
+              <p style={moduleDescStyle}>
+                Manage departments, positions, hierarchy, and organizational changes
+              </p>
+            </div>
 
-          <li>
-            <Link
-              href="/employee-profile/search-by-number"
-              style={itemTitleStyle}
-            >
-              <span style={bulletStyle}>➤</span>
-              <span>Search Employee by Employee Number (HR)</span>
-            </Link>
-            <p style={itemDescStyle}>
-              Quickly look up an existing employee using their employee number
-              (e.g. EMP-0012) to view profile details.
-            </p>
-          </li>
+            <ul style={listStyle}>
+              <li>
+                <Link 
+                  href="/dashboard" 
+                  style={linkStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(59,130,246,0.2)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(59,130,246,0.1)"}
+                >
+                  <span style={iconStyle}>📊</span>
+                  <span>Dashboard Overview</span>
+                </Link>
+                <p style={descStyle}>View stats and quick access to all features</p>
+              </li>
 
-          <li>
-            <Link href="/employee-profile/self-demo" style={itemTitleStyle}>
-              <span style={bulletStyle}>➤</span>
-              <span>Self-Service Profile (Employee demo)</span>
-            </Link>
-            <p style={itemDescStyle}>
-              Simulates an employee viewing and editing their own profile by
-              loading a profile using its MongoDB ID.
-            </p>
-          </li>
+              <li>
+                <Link 
+                  href="/departments" 
+                  style={linkStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(59,130,246,0.2)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(59,130,246,0.1)"}
+                >
+                  <span style={iconStyle}>🏢</span>
+                  <span>Departments</span>
+                </Link>
+                <p style={descStyle}>Create, view, and manage departments</p>
+              </li>
 
-          <li>
-            <Link
-              href="/employee-profile/change-requests"
-              style={itemTitleStyle}
-            >
-              <span style={bulletStyle}>➤</span>
-              <span>List Change Requests (HR)</span>
-            </Link>
-            <p style={itemDescStyle}>
-              Shows all submitted profile change requests filtered by status
-              (PENDING, APPROVED, REJECTED, etc.).
-            </p>
-          </li>
+              <li>
+                <Link 
+                  href="/positions" 
+                  style={linkStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(59,130,246,0.2)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(59,130,246,0.1)"}
+                >
+                  <span style={iconStyle}>💼</span>
+                  <span>Positions</span>
+                </Link>
+                <p style={descStyle}>Manage positions, activate/deactivate</p>
+              </li>
 
-          <li>
-            <Link
-              href="/employee-profile/change-requests/process-demo"
-              style={itemTitleStyle}
-            >
-              <span style={bulletStyle}>➤</span>
-              <span>Process Change Request (HR demo)</span>
-            </Link>
-            <p style={itemDescStyle}>
-              HR pastes a Request ID (ECR-...) and updates its status, optionally
-              applying approved changes to the profile.
-            </p>
-          </li>
+              <li>
+                <Link 
+                  href="/change-requests" 
+                  style={linkStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(59,130,246,0.2)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(59,130,246,0.1)"}
+                >
+                  <span style={iconStyle}>📝</span>
+                  <span>Change Requests</span>
+                </Link>
+                <p style={descStyle}>Submit and approve organizational changes</p>
+              </li>
 
-          <li>
-            <Link
-              href="/employee-profile/manager-team-demo"
-              style={itemTitleStyle}
-            >
-              <span style={bulletStyle}>➤</span>
-              <span>Manager Team View (demo)</span>
-            </Link>
-            <p style={itemDescStyle}>
-              Paste a manager&apos;s EmployeeProfile MongoDB ID to load their
-              direct reports and basic team information.
-            </p>
-          </li>
-        </ul>
+              <li>
+                <Link 
+                  href="/org-chart" 
+                  style={linkStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(59,130,246,0.2)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(59,130,246,0.1)"}
+                >
+                  <span style={iconStyle}>🌳</span>
+                  <span>Org Chart Visualization</span>
+                </Link>
+                <p style={descStyle}>View organizational hierarchy tree</p>
+              </li>
+            </ul>
+          </section>
 
-        <p style={footerStyle}>
-          For now, some demo screens ask you to paste MongoDB IDs manually. In a
-          real integrated system these values would come from the logged-in user
-          and from the Organization Structure subsystem.
-        </p>
-      </section>
+          {/* Employee Profile Module */}
+          <section style={cardStyle}>
+            <div style={cardHeaderStyle}>
+              <div style={moduleIconStyle}>👥</div>
+              <h2 style={empTitleColor}>Employee Profile</h2>
+              <p style={moduleDescStyle}>
+                Create, search, and maintain employee master records
+              </p>
+            </div>
+
+            <ul style={listStyle}>
+              <li>
+                <Link 
+                  href="/employee-profile/new" 
+                  style={empLinkStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(16,185,129,0.2)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(16,185,129,0.1)"}
+                >
+                  <span style={iconStyle}>➕</span>
+                  <span>Create Employee Profile (HR)</span>
+                </Link>
+                <p style={descStyle}>Create new employee master record with all details</p>
+              </li>
+
+              <li>
+                <Link 
+                  href="/employee-profile/search-by-number" 
+                  style={empLinkStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(16,185,129,0.2)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(16,185,129,0.1)"}
+                >
+                  <span style={iconStyle}>🔍</span>
+                  <span>Search Employee by Number</span>
+                </Link>
+                <p style={descStyle}>Look up employees using employee number (EMP-0012)</p>
+              </li>
+
+              <li>
+                <Link 
+                  href="/employee-profile/self-demo" 
+                  style={empLinkStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(16,185,129,0.2)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(16,185,129,0.1)"}
+                >
+                  <span style={iconStyle}>👨‍💼</span>
+                  <span>Self-Service Profile (Demo)</span>
+                </Link>
+                <p style={descStyle}>Employee views and edits their own profile</p>
+              </li>
+
+              <li>
+                <Link 
+                  href="/employee-profile/change-requests" 
+                  style={empLinkStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(16,185,129,0.2)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(16,185,129,0.1)"}
+                >
+                  <span style={iconStyle}>📋</span>
+                  <span>List Change Requests (HR)</span>
+                </Link>
+                <p style={descStyle}>View all profile change requests by status</p>
+              </li>
+
+              <li>
+                <Link 
+                  href="/employee-profile/change-requests/process" 
+                  style={empLinkStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(16,185,129,0.2)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(16,185,129,0.1)"}
+                >
+                  <span style={iconStyle}>✅</span>
+                  <span>Process Change Requests</span>
+                </Link>
+                <p style={descStyle}>HR reviews and approves/rejects profile changes</p>
+              </li>
+
+              <li>
+                <Link 
+                  href="/employee-profile/manager-team-demo" 
+                  style={empLinkStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "rgba(16,185,129,0.2)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "rgba(16,185,129,0.1)"}
+                >
+                  <span style={iconStyle}>👥</span>
+                  <span>Manager Team View (Demo)</span>
+                </Link>
+                <p style={descStyle}>Manager views direct reports and team info</p>
+              </li>
+            </ul>
+          </section>
+        </div>
+
+        {/* Login Link */}
+        <div style={{ textAlign: "center", marginTop: "2rem" }}>
+          <Link
+            href="/login"
+            style={{
+              display: "inline-block",
+              padding: "1rem 2rem",
+              background: "rgba(255,255,255,0.1)",
+              border: "2px solid white",
+              borderRadius: "12px",
+              color: "white",
+              textDecoration: "none",
+              fontSize: "1.1rem",
+              fontWeight: 600,
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "white";
+              e.currentTarget.style.color = "#667eea";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.1)";
+              e.currentTarget.style.color = "white";
+            }}
+          >
+            🔐 Login to System
+          </Link>
+        </div>
+      </div>
     </main>
   );
 }
