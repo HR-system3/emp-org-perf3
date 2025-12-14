@@ -1,4 +1,4 @@
-// ./src/components/avatar.tsx
+// ./src/components/Avatar.tsx
 
 "use client";
 
