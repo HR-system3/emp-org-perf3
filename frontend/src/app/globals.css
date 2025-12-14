@@ -1,7 +1,9 @@
 /* ./src/app/global.css */
 
 /* --------- GLOBAL THEME --------- */
-
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 :root {
   --bg-body: #020617;          /* dark navy */
   --bg-card: #020617;
@@ -15,6 +17,9 @@
   --danger: #ef4444;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
 }
 
 * {
@@ -27,8 +32,13 @@ body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
     sans-serif;
-  background: #c9f0ff; /* light cyan background like your screenshot */
-  color: #f9fafb;
+    color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
 }
 
 /* Centered main container */
