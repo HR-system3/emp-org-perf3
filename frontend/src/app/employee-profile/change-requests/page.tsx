@@ -1,12 +1,16 @@
+// ./src/app/employee-profile/change-requests/page.tsx
+
+
 "use client";
 
 import { useEffect, useState } from "react";
-import api from "@/lib/axios";
+import {api} from "@/lib/axios";
 import {
   EmployeeProfileChangeRequest,
   ProfileChangeStatus,
 } from "@/types/employeeProfile";
 import BackButton from "@/components/BackButton";
+import StatusBadge from "@/components/StatusBadge";
 
 const statuses: (ProfileChangeStatus | "ALL")[] = [
   "ALL",
@@ -115,7 +119,9 @@ export default function ChangeRequestsListPage() {
                   <tr key={cr._id}>
                     <td>{cr.requestId}</td>
                     <td>{cr.employeeProfileId}</td>
-                    <td>{cr.status}</td>
+                    <td> 
+                      <StatusBadge kind="changeRequest" value={cr.status} />
+                    </td>
                     <td>
                       {cr.submittedAt
                         ? new Date(cr.submittedAt).toLocaleString()

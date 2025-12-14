@@ -7,12 +7,26 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Parse cookies
   app.use(cookieParser());
 
-  // CORS – allow frontend on 3000 or 3001 to call API with cookies
+  // ✅ CORS (safe for dev + Vercel + Render)
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    process.env.FRONTEND_URL, // e.g. https://emp-org-perf3.vercel.app
+  ].filter(Boolean) as string[];
+
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:3001'],
+    origin: (origin, cb) => {
+      // allow requests with no origin (Postman/curl/server-to-server)
+      if (!origin) return cb(null, true);
+
+      const isAllowed =
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app'); // allow Vercel preview domains
+
+      return cb(isAllowed ? null : new Error('Not allowed by CORS'), isAllowed);
+    },
     credentials: true,
   });
 
@@ -26,11 +40,10 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document, {
-    swaggerOptions: {
-      withCredentials: true,
-    },
+    swaggerOptions: { withCredentials: true },
   });
 
-  await app.listen(3000);
+  const port = process.env.PORT || 3000;
+  await app.listen(port, '0.0.0.0'); // ✅ REQUIRED for Render
 }
 bootstrap();

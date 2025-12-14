@@ -1,28 +1,36 @@
+// ./src/components/BackButton.tsx
+
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function BackButton() {
+  const router = useRouter();
+
   return (
-    <div style={{ marginBottom: "1.5rem" }}>
-      <Link
-        href="/"
-        style={{
-          color: "#0070f3",
-          textDecoration: "none",
-          fontWeight: 500,
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "0.25rem",
-          padding: "0.35rem 0.7rem",
-          borderRadius: "999px",
-          border: "1px solid #0070f3",
-          fontSize: "0.9rem",
-        }}
-      >
-        <span>←</span>
-        <span>Back to Employee Profile Page</span>
-      </Link>
-    </div>
+    <button
+      onClick={() => router.push("/employee-profile")}
+      style={{
+        background: "transparent",
+        border: "none",
+        color: "#5DAFFF",          // <── bright blue, very visible
+        fontSize: "0.9rem",
+        fontWeight: 600,
+        cursor: "pointer",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "0.4rem",
+        marginBottom: "1rem",
+        padding: 0,
+      }}
+      onMouseEnter={(e) =>
+        (e.currentTarget.style.color = "#8CC8FF") // lighter on hover
+      }
+      onMouseLeave={(e) =>
+        (e.currentTarget.style.color = "#5DAFFF")
+      }
+    >
+      ← Back to Employee Profile Page
+    </button>
   );
 }

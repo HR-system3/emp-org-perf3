@@ -1,24 +1,38 @@
-import { forwardRef, Module } from '@nestjs/common';
-import { PayrollTrackingController } from './payroll-tracking.controller';
-import { PayrollTrackingService } from './payroll-tracking.service';
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+
+// Models
 import { refunds, refundsSchema } from './models/refunds.schema';
-import { claims, claimsSchema } from './models/claims.schema';
-import { disputes, disputesSchema } from './models/disputes.schema';
-import { PayrollConfigurationModule } from '../payroll-configuration/payroll-configuration.module';
-import { PayrollExecutionModule } from '../payroll-execution/payroll-execution.module';
+import { Claim, ClaimSchema } from './models/claims.schema';
+import { Dispute, DisputeSchema } from './models/disputes.schema';
+
+// Controllers
+import { RefundsController } from './refund.controller';
+import { DisputesController } from './disputes.controller';
+
+// Services
+import { RefundsService } from './refund.service';
+import { DisputesService } from './disputes.service';
 
 @Module({
-  
   imports: [
-    PayrollConfigurationModule,forwardRef(()=> PayrollExecutionModule),
     MongooseModule.forFeature([
       { name: refunds.name, schema: refundsSchema },
-      { name: claims.name, schema: claimsSchema },
-      { name: disputes.name, schema: disputesSchema },
-    ])],
-  controllers: [PayrollTrackingController],
-  providers: [PayrollTrackingService],
-  exports:[PayrollTrackingService]
+      { name: Dispute.name, schema: DisputeSchema },
+      { name: Claim.name, schema: ClaimSchema },
+    ]),
+  ],
+  controllers: [
+    RefundsController,
+    DisputesController,
+  ],
+  providers: [
+    RefundsService,
+    DisputesService,
+  ],
+  exports: [
+    RefundsService,
+    DisputesService,
+  ],
 })
-export class PayrollTrackingModule { }
+export class PayrollTrackingModule {}
