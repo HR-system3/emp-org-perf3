@@ -1,30 +1,62 @@
-// .src/services/api/departments.service.ts
+import axiosInstance from './axios.config';
+import {
+  Department,
+  CreateDepartmentDTO,
+  UpdateDepartmentDTO,
+} from '@/types/department.types';
 
-import { api } from "@/lib/axios";
+type DepartmentApi = {
+  _id: string;
+  deptId: string;
+  code: string;
+  name: string;
+  description?: string;
+  headPositionId?: string;
+  costCenter: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
 
-/**
- * NOTE:
- * Organization Structure is NOT part of this milestone.
- * These functions exist only to prevent import/build errors.
- */
-
-export async function listDepartments() {
-  try {
-    const res = await api.get("/departments");
-    return res.data;
-  } catch {
-    // Safe fallback so UI does not crash
-    return [];
-  }
+function mapDepartment(api: DepartmentApi): Department {
+  const { _id, ...rest } = api;
+  return { id: _id, ...rest };
 }
 
-export async function getDepartmentById(departmentId: string) {
-  if (!departmentId) return null;
+export const departmentsService = {
+  async getAllDepartments(): Promise<Department[]> {
+    const response = await axiosInstance.get<DepartmentApi[]>(
+      '/organization-structure/departments',
+    );
+    return response.data.map(mapDepartment);
+  },
 
-  try {
-    const res = await api.get(`/departments/${departmentId}`);
-    return res.data;
-  } catch {
-    return null;
-  }
-}
+  async getDepartmentById(id: string): Promise<Department> {
+    const response = await axiosInstance.get<DepartmentApi>(
+      `/organization-structure/departments/${id}`,
+    );
+    return mapDepartment(response.data);
+  },
+
+  async createDepartment(dto: CreateDepartmentDTO): Promise<Department> {
+    const response = await axiosInstance.post<DepartmentApi>(
+      '/organization-structure/departments',
+      dto,
+    );
+    return mapDepartment(response.data);
+  },
+
+  async updateDepartment(
+    id: string,
+    dto: UpdateDepartmentDTO,
+  ): Promise<Department> {
+    const response = await axiosInstance.put<DepartmentApi>(
+      `/organization-structure/departments/${id}`,
+      dto,
+    );
+    return mapDepartment(response.data);
+  },
+};
+
+
+

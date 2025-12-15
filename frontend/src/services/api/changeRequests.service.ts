@@ -1,27 +1,45 @@
-// ./src/services/api/ChangeRequests.Service.ts 
+import axiosInstance from './axios.config';
+import {
+  ChangeRequest,
+  CreateChangeRequestDTO,
+  ApprovalDTO,
+} from '@/types/changeRequest.types';
 
-import api from "./axios.config";
-import { EmployeeProfileChangeRequest, ProfileChangeStatus } from "@/types/employeeProfile";
+export const changeRequestsService = {
+  async getAllChangeRequests(): Promise<ChangeRequest[]> {
+    const response = await axiosInstance.get<ChangeRequest[]>(
+      '/organization-structure/change-requests',
+    );
+    return response.data;
+  },
 
-export async function listChangeRequests(status?: ProfileChangeStatus) {
-  const res = await api.get<EmployeeProfileChangeRequest[]>("/employee-profile/change-requests", {
-    params: status ? { status } : {},
-  });
-  return res.data;
-}
+  async getChangeRequestById(id: string): Promise<ChangeRequest> {
+    const response = await axiosInstance.get<ChangeRequest>(
+      `/organization-structure/change-requests/${id}`,
+    );
+    return response.data;
+  },
 
-export async function submitChangeRequest(
-  employeeId: string,
-  payload: { category: string; reason?: string; requestedChanges: Record<string, any> }
-) {
-  const res = await api.post<EmployeeProfileChangeRequest>(`/employee-profile/${employeeId}/change-requests`, payload);
-  return res.data;
-}
+  async createChangeRequest(
+    dto: CreateChangeRequestDTO,
+  ): Promise<ChangeRequest> {
+    const response = await axiosInstance.post<ChangeRequest>(
+      '/organization-structure/change-requests',
+      dto,
+    );
+    return response.data;
+  },
 
-export async function processChangeRequest(
-  requestId: string,
-  payload: { status: ProfileChangeStatus; appliedChanges?: Record<string, any> }
-) {
-  const res = await api.patch<EmployeeProfileChangeRequest>(`/employee-profile/change-requests/${requestId}`, payload);
-  return res.data;
-}
+  async approveChangeRequest(
+    id: string,
+    dto: ApprovalDTO,
+  ): Promise<ChangeRequest> {
+    const response = await axiosInstance.post<ChangeRequest>(
+      `/organization-structure/change-requests/${id}/approve`,
+      dto,
+    );
+    return response.data;
+  },
+};
+
+
