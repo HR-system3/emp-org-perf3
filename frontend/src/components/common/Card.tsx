@@ -1,25 +1,30 @@
 //.src/components/common/Card.tsx
 
-"use client";
+import React from "react";
 
-export default function Card({
-  title,
-  subtitle,
-  children,
-}: {
+type CardProps = React.HTMLAttributes<HTMLDivElement> & {
   title?: string;
   subtitle?: string;
   children: React.ReactNode;
-}) {
+};
+
+export default function Card({ title, subtitle, children, className, ...rest }: CardProps) {
   return (
-    <main className="page">
-      <div className="page-inner">
-        <div className="card">
-          {title && <div className="card-title">{title}</div>}
-          {subtitle && <div className="text-muted card-subtitle">{subtitle}</div>}
-          <div style={{ marginTop: 14 }}>{children}</div>
+    <div
+      {...rest}
+      className={[
+        "rounded-xl border bg-white p-4 shadow-sm",
+        className || "",
+      ].join(" ")}
+    >
+      {(title || subtitle) && (
+        <div className="mb-3">
+          {title && <h1 className="text-xl font-semibold">{title}</h1>}
+          {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
         </div>
-      </div>
-    </main>
+      )}
+
+      {children}
+    </div>
   );
 }

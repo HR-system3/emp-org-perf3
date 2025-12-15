@@ -4,6 +4,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 :root {
   --bg-body: #020617;          /* dark navy */
   --bg-card: #020617;
