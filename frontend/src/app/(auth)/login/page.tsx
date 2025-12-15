@@ -1,12 +1,12 @@
 // ./src/app/(auth)/login/page.tsx
 
-"use client";
+import { Suspense } from "react";
+import LoginClient from "./LoginClient";
 
-import { useSearchParams } from "next/navigation";
-import LoginForm from "@/components/auth/LoginForm";
-
-export default function LoginPage() {
-  const sp = useSearchParams();
-  const next = sp.get("next") || "/dashboard";
-  return <LoginForm redirectTo={next} />;
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginClient />
+    </Suspense>
+  );
 }
