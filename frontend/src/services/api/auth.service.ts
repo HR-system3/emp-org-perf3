@@ -3,20 +3,38 @@ import { LoginRequest, LoginResponse, User } from '@/types/auth.types';
 
 const TOKEN_KEY = 'auth_token';
 
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  name: string;
+  role?: string;
+}
+
 export const authService = {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     const response = await axiosInstance.post<LoginResponse>('/auth/login', credentials);
     return response.data;
   },
 
-  async getProfile(): Promise<User> {
-    const response = await axiosInstance.get<User>('/auth/profile');
+  async register(data: RegisterRequest): Promise<LoginResponse> {
+    const response = await axiosInstance.post<LoginResponse>('/auth/register', data);
     return response.data;
   },
 
-  logout(): void {
-    this.removeToken();
-    window.location.href = '/login';
+  async getProfile(): Promise<User> {
+    const response = await axiosInstance.get<User>('/auth/me');
+    return response.data;
+  },
+
+  async logout(): Promise<void> {
+    try {
+      await axiosInstance.post('/auth/logout');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      this.removeToken();
+      window.location.href = '/login';
+    }
   },
 
   getToken(): string | null {
