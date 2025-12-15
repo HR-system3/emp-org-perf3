@@ -1,3 +1,5 @@
+//./frontend/src/app/(dashboard)/positions/[id]/page.tsx
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -37,7 +39,7 @@ export default function PositionDetailsPage() {
         title: data.title,
         description: data.description,
         departmentId: data.departmentId,
-        reportsTo: data.reportsTo,
+        reportsToPositionId: (data as any).reportsToPositionId ?? (data as any).reportsTo,
       });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load position');
@@ -71,7 +73,7 @@ export default function PositionDetailsPage() {
     const date = prompt('Enter delimit date (YYYY-MM-DD):');
     if (!date) return;
     try {
-      const data: DelimitPositionDTO = { delimitDate: date };
+      const data: DelimitPositionDTO = ({ delimitDate: date } as any);
       await positionsService.delimitPosition(id, data);
       fetchPosition();
     } catch (err: any) {
@@ -178,13 +180,13 @@ export default function PositionDetailsPage() {
                   <p className="text-gray-600">{position.description || 'No description'}</p>
                   <div className="mt-4 space-y-2">
                     <p className="text-sm">
-                      <span className="font-medium">Department:</span>{' '}
-                      {position.department?.name}
+                      <span className="font-medium">Department:</span>{" "}
+                      {departments.find((d) => d.id === position.departmentId)?.name || "—"}
                     </p>
-                    {position.reportsToPosition && (
+                    {position.reportsToPositionId && (
                       <p className="text-sm">
-                        <span className="font-medium">Reports to:</span>{' '}
-                        {position.reportsToPosition.title}
+                        <span className="font-medium">Reports to:</span>{" "}
+                        {position.reportsToPositionId}
                       </p>
                     )}
                   </div>
@@ -218,10 +220,10 @@ export default function PositionDetailsPage() {
                 <p className="text-sm text-gray-500">Status</p>
                 <p className="font-medium">{position.isActive ? 'Active' : 'Inactive'}</p>
               </div>
-              {position.delimitDate && (
+              {(position as any).delimitDate && (
                 <div>
                   <p className="text-sm text-gray-500">Delimit Date</p>
-                  <p className="text-gray-900">{formatDate(position.delimitDate)}</p>
+                  <p className="text-gray-900">{formatDate((position as any).delimitDate)}</p>
                 </div>
               )}
               <div>

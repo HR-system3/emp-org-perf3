@@ -1,3 +1,5 @@
+// ./src/frontend/src/components/positions/PositionCard.tsx
+
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import Card from '@/components/common/Card';
@@ -31,9 +33,9 @@ export default function PositionCard({ position }: PositionCardProps) {
             {position.description || 'No description provided'}
           </p>
           <div className="space-y-1 text-sm text-gray-500">
-            <div>🏢 {position.department?.name || 'Unknown Department'}</div>
-            {position.reportsToPosition && (
-              <div>👤 Reports to: {position.reportsToPosition.title}</div>
+            <div>🏢 {position.departmentId || 'Unknown Department'}</div>
+            {(position as any).reportsToPositionId && (
+              <div>👤 Reports to: {(position as any).reportsToPositionId}</div>
             )}
           </div>
         </div>

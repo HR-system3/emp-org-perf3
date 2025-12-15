@@ -1,3 +1,5 @@
+//./frontend/src/components/departments/DepartmentCard.tsx
+
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import Card from '@/components/common/Card';

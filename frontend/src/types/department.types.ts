@@ -11,13 +11,20 @@ export interface Department {
    * Department code, e.g. "HR"
    */
   code: string;
+
   name: string;
   description?: string;
+
   headPositionId?: string;
+
   costCenter: string;
   isActive: boolean;
+
   createdAt: string;
   updatedAt: string;
+
+  employeesCount?: number;
+  positionsCount?: number;
 }
 
 export interface CreateDepartmentDTO {
@@ -25,6 +32,7 @@ export interface CreateDepartmentDTO {
    * Optional business ID; if omitted backend will generate one
    */
   deptId?: string;
+
   code: string;
   name: string;
   description?: string;
@@ -40,3 +48,4 @@ export interface UpdateDepartmentDTO {
   costCenter?: string;
   isActive?: boolean;
 }
+
