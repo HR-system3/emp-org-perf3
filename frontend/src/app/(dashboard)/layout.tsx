@@ -19,7 +19,7 @@ function NavLink({ href, label }: { href: string; label: string }) {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { auth, logout } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
     <ProtectedRoute>
@@ -44,9 +44,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           <div className="top-nav-right">
             <span>
-              Role: <strong>{auth?.role || "—"}</strong>
+              Role: <strong>{user?.role || "—"}</strong>
             </span>
-            <span className="text-muted">{auth?.userId ? `UserId: ${auth.userId}` : "No UserId"}</span>
+            <span className="text-muted">{user?.id ? `UserId: ${user.id}` : "No UserId"}</span>
             <button
               className="btn btn-ghost"
               onClick={() => {

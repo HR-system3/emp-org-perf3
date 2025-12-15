@@ -10,8 +10,8 @@ import { EmployeeProfileChangeRequest } from "@/types/employeeProfile";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function SubmitChangeRequestPage() {
-  const { auth } = useAuth();
-  const [employeeId, setEmployeeId] = useState(auth?.userId || "");
+  const {user} = useAuth();
+  const [employeeId, setEmployeeId] = useState(user?.id || "");
   const [created, setCreated] = useState<EmployeeProfileChangeRequest | null>(null);
 
   return (

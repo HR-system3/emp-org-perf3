@@ -1,7 +1,9 @@
+// ./src/components/layout/Header.tsx
+
 'use client';
 
 import React from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import useAuth from '@/hooks/useAuth';
 import Button from '@/components/common/Button';
 import { authService } from '@/services/api/auth.service';
 
@@ -29,7 +31,7 @@ export default function Header() {
             </div>
           </div>
         )}
-        <Button variant="outline" size="sm" onClick={handleLogout}>
+        <Button variant="ghost" size="sm" onClick={handleLogout}>
           Logout
         </Button>
       </div>

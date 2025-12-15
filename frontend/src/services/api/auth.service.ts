@@ -1,3 +1,5 @@
+// ./src/services/api/auth.service.ts
+
 import axiosInstance from './axios.config';
 import { LoginRequest, LoginResponse, User } from '@/types/auth.types';
 
@@ -25,25 +27,6 @@ export const authService = {
         role: userPayload.role || '',
       },
     };
-  },
-
-  async register(data: RegisterRequest): Promise<{ message: string }> {
-    try {
-      const response = await axiosInstance.post('/auth/register', data);
-      return response.data;
-    } catch (error: any) {
-      // Re-throw with more context
-      if (error.response) {
-        // Server responded with error
-        throw error;
-      } else if (error.request) {
-        // Request made but no response (network error)
-        throw new Error('Network error: Could not reach server. Please check if the backend is running.');
-      } else {
-        // Something else happened
-        throw error;
-      }
-    }
   },
 
   async register(data: RegisterRequest): Promise<LoginResponse> {

@@ -8,6 +8,9 @@ import Link from 'next/link';
 import Button from '@/components/common/Button';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import { authService } from '@/services/api/auth.service';
+import Card from '../common/Card';
+import {api} from "@/lib/axios";
+
 
 type Props = {
   redirectTo?: string;
@@ -41,43 +44,30 @@ export default function LoginForm({ redirectTo = "/dashboard" }: Props) {
     e.preventDefault();
     setError(null);
     setLoading(true);
-
-    try {
-      /**
-       * If your backend supports real login, this will work.
-       * If not, user can use Demo Login.
-       *
-       * Expected backend response examples:
-       * - { userId, role }
-       * - { user: { _id }, role }
-       */
-      const res = await api.post("/auth/login", { email, password });
-
-    setIsLoading(true);
-
+  
     try {
       const response = await authService.login({ email, password });
-      console.log('Login response:', response);
-      
-      if (response && response.access_token) {
+      console.log("Login response:", response);
+  
+      if (response?.access_token) {
         authService.setToken(response.access_token);
-        console.log('Token saved, redirecting...');
-        // Use window.location to force a full page reload and clear any cached state
-        window.location.href = '/dashboard';
-      } else {
-        setError('Login failed: No token received from server');
-        setIsLoading(false);
+        window.location.href = "/dashboard";
+        return;
       }
+  
+      setError("Login failed: No token received from server");
     } catch (err: any) {
-      console.error('Login error:', err);
-      const errorMessage = err.response?.data?.message 
-        || err.response?.data?.error 
-        || err.message 
-        || 'Login failed. Please check your credentials and try again.';
+      console.error("Login error:", err);
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Login failed. Please check your credentials and try again.";
       setError(errorMessage);
-      setIsLoading(false);
+    } finally {
+      setLoading(false);
     }
-  };
+  }
 
   return (
     <Card title="Login" subtitle="Use backend login if available, or Demo Login for Milestone 3.">

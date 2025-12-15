@@ -2,6 +2,12 @@
 
 "use client";
 
-export default function ErrorMessage({ message }: { message: string }) {
-  return <div className="error">Error: {message}</div>;
+// ErrorMessage.tsx
+export default function ErrorMessage({ message, onDismiss }: { message: string; onDismiss?: () => void }) {
+  return (
+    <div className="error-box">
+      <span>{message}</span>
+      {onDismiss && <button onClick={onDismiss}>×</button>}
+    </div>
+  );
 }

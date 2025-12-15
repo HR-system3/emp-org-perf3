@@ -8,7 +8,7 @@ import useAuth from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function MyProfilePage() {
-  const { auth } = useAuth();
+  const { user } = useAuth();
 
   return (
     <ProtectedRoute>

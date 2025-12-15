@@ -12,13 +12,13 @@ type Props = {
 };
 
 export default function RoleGate({ allowRoles, children, fallback = null }: Props) {
-  const { auth } = useAuth();
+  const { user } = useAuth();
 
   // If not logged in, hide (ProtectedRoute will handle redirect on protected pages)
-  if (!auth) return fallback;
+  if (!user) return fallback;
 
   // If no role restrictions, show for any logged-in user
   if (!allowRoles || allowRoles.length === 0) return <>{children}</>;
 
-  return allowRoles.includes(auth.role) ? <>{children}</> : fallback;
+  return allowRoles.includes(user.role) ? <>{children}</> : fallback;
 }

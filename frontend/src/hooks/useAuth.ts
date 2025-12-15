@@ -3,8 +3,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-export type Role = "Employee" | "Manager" | "HR" | "Admin";
+import { useRouter } from "next/navigation";
+import { authService } from "@/services/api/auth.service";
+import type { LoginRequest, User, Role } from "@/types/auth.types";
 
 export type AuthState = {
   role: Role;
@@ -25,37 +26,46 @@ export function getAuth(): AuthState | null {
 }
 
 export default function useAuth() {
+  const router = useRouter();
+
   const [auth, setAuth] = useState<AuthState | null>(null);
+
+  // ✅ add missing states (fixes your errors)
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     setAuth(getAuth());
+    checkAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkAuth = async () => {
     try {
       const token = authService.getToken();
-      if (token) {
-        try {
-          const userData = await authService.getProfile();
-          setUser(userData);
-          setIsAuthenticated(true);
-        } catch (profileError: any) {
-          console.error('Profile fetch error:', profileError);
-          // If token is invalid/expired, remove it
-          if (profileError.response?.status === 401) {
-            authService.removeToken();
-            setUser(null);
-            setIsAuthenticated(false);
-          } else {
-            // For other errors, still consider authenticated if token exists
-            setIsAuthenticated(true);
-          }
-        }
-      } else {
+      if (!token) {
         setIsAuthenticated(false);
+        return;
+      }
+
+      try {
+        const userData = await authService.getProfile();
+        setUser(userData);
+        setIsAuthenticated(true);
+      } catch (profileError: any) {
+        console.error("Profile fetch error:", profileError);
+
+        if (profileError.response?.status === 401) {
+          authService.removeToken();
+          setUser(null);
+          setIsAuthenticated(false);
+        } else {
+          setIsAuthenticated(true);
+        }
       }
     } catch (error) {
-      console.error('Auth check error:', error);
+      console.error("Auth check error:", error);
       authService.removeToken();
       setUser(null);
       setIsAuthenticated(false);
@@ -70,12 +80,12 @@ export default function useAuth() {
       authService.setToken(response.access_token);
       setUser(response.user);
       setIsAuthenticated(true);
-      router.push('/dashboard');
-      return { success: true };
+      router.push("/dashboard");
+      return { success: true as const };
     } catch (error: any) {
       return {
-        success: false,
-        error: error.response?.data?.message || 'Login failed',
+        success: false as const,
+        error: error.response?.data?.message || "Login failed",
       };
     }
   };
@@ -87,6 +97,7 @@ export default function useAuth() {
   };
 
   return {
+    auth, // keeping your old state too
     user,
     isLoading,
     isAuthenticated,

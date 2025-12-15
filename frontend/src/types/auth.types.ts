@@ -1,8 +1,17 @@
+// ./src/types/auth.types.ts
+
+export type Role = "Employee" | "Manager" | "HR" | "Admin";
+
 export interface User {
   id: string;
   email: string;
   name: string;
-  role: string;
+  role: Role;
+
+  // optional legacy fields (so old code doesn't break)
+  _id?: string;
+  userId?: string;
+
   positionId?: string;
   departmentId?: string;
   managerId?: string;
@@ -16,11 +25,4 @@ export interface LoginRequest {
 export interface LoginResponse {
   access_token: string;
   user: User;
-}
-
-export interface AuthState {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
 }
