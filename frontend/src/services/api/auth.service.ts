@@ -46,6 +46,11 @@ export const authService = {
     }
   },
 
+  async register(data: RegisterRequest): Promise<LoginResponse> {
+    const response = await axiosInstance.post<LoginResponse>('/auth/register', data);
+    return response.data;
+  },
+
   async getProfile(): Promise<User> {
     const response = await axiosInstance.get<any>('/auth/me');
     // Backend returns: { id, name, email, role }
@@ -57,9 +62,15 @@ export const authService = {
     };
   },
 
-  logout(): void {
-    this.removeToken();
-    window.location.href = '/login';
+  async logout(): Promise<void> {
+    try {
+      await axiosInstance.post('/auth/logout');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      this.removeToken();
+      window.location.href = '/login';
+    }
   },
 
   getToken(): string | null {

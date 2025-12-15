@@ -1,16 +1,34 @@
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { authService } from '@/services/api/auth.service';
-import { User, LoginRequest } from '@/types/auth.types';
+//.src/hooks/useAuth.ts  
 
-export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const router = useRouter();
+"use client";
+
+import { useEffect, useState } from "react";
+
+export type Role = "Employee" | "Manager" | "HR" | "Admin";
+
+export type AuthState = {
+  role: Role;
+  userId?: string;
+  email?: string;
+  loggedInAt?: string;
+};
+
+export function getAuth(): AuthState | null {
+  if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem("hr_auth");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export default function useAuth() {
+  const [auth, setAuth] = useState<AuthState | null>(null);
 
   useEffect(() => {
-    checkAuth();
+    setAuth(getAuth());
   }, []);
 
   const checkAuth = async () => {

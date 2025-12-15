@@ -1,26 +1,30 @@
-import React from 'react';
+//.src/components/common/Card.tsx
 
-interface CardProps {
-  children: React.ReactNode;
-  className?: string;
+import React from "react";
+
+type CardProps = React.HTMLAttributes<HTMLDivElement> & {
   title?: string;
-  onClick?: () => void;
-}
+  subtitle?: string;
+  children: React.ReactNode;
+};
 
-export default function Card({ children, className = '', title, onClick }: CardProps) {
+export default function Card({ title, subtitle, children, className, ...rest }: CardProps) {
   return (
     <div
-      className={`bg-white rounded-lg border border-gray-200 shadow-sm ${
-        onClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''
-      } ${className}`}
-      onClick={onClick}
+      {...rest}
+      className={[
+        "rounded-xl border bg-white p-4 shadow-sm",
+        className || "",
+      ].join(" ")}
     >
-      {title && (
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+      {(title || subtitle) && (
+        <div className="mb-3">
+          {title && <h1 className="text-xl font-semibold">{title}</h1>}
+          {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
         </div>
       )}
-      <div className="p-6">{children}</div>
+
+      {children}
     </div>
   );
 }

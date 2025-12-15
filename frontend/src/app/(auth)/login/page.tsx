@@ -1,10 +1,12 @@
-import React from 'react';
-import LoginForm from '@/components/auth/LoginForm';
+// ./src/app/(auth)/login/page.tsx
 
-export default function LoginPage() {
+import { Suspense } from "react";
+import LoginClient from "./LoginClient";
+
+export default function Page() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <LoginForm />
-    </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginClient />
+    </Suspense>
   );
 }

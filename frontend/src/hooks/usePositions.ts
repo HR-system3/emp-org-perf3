@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { positionsService } from '@/services/api/positions.service';
+import * as positionsService from '@/services/api/positions.service';
 import { Position } from '@/types/position.types';
 
 export function usePositions() {
@@ -11,7 +11,7 @@ export function usePositions() {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await positionsService.getAllPositions();
+      const data = await positionsService.GetAllPositions();
       setPositions(data);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch positions');
