@@ -1,8 +1,10 @@
+// ./src/seeds/seed.ts
+
 import mongoose from 'mongoose';
 import * as dotenv from 'dotenv';
 import { seedOrganizationStructure } from '../organization-structure/seed';
 import { seedTimeManagement } from '../time-management/seed';
-
+import { seedUsers } from '../users/seed/users.seeds';
 dotenv.config();
 
 async function seed() {
@@ -20,6 +22,7 @@ async function seed() {
     const connection = mongoose.connection;
 
     console.log('Connected to MongoDB. Starting seed process...\n');
+    await seedUsers(connection);
 
     // Seed Organization Structure
     const orgData = await seedOrganizationStructure(connection);

@@ -10,15 +10,16 @@ import {
 
 import { LeavesService } from '../leaves.service';
 
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+//import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { Role } from '../../auth/enums/roles.enum';
 
 import { ApproveRejectLeaveDto } from '../dto/approve-reject-leave.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('leaves/manager')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(AuthGuard, RolesGuard)
 @Roles(Role.MANAGER)
 export class ManagerLeavesController {
   constructor(private readonly leavesService: LeavesService) {}

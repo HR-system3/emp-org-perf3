@@ -10,6 +10,7 @@ import {
   EmployeeProfileChangeRequest,
 } from "@/types/employeeProfile";
 import BackButton from "@/components/BackButton";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 
 const categories: ChangeRequestCategory[] = [
@@ -77,6 +78,7 @@ export default function NewChangeRequestPage() {
   }
 
   return (
+    <ProtectedRoute allowRoles={["Employee", "Manager"]}>
     <main style={{ padding: "2rem", maxWidth: 800, margin: "0 auto" }}>
         <BackButton />
       <h1>New Profile Change Request</h1>
@@ -151,5 +153,6 @@ export default function NewChangeRequestPage() {
         </section>
       )}
     </main>
+    </ProtectedRoute>
   );
 }

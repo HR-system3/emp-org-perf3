@@ -8,6 +8,7 @@ import BackButton from "@/components/BackButton";
 import Avatar from "@/components/Avatar";
 import StatusBadge from "@/components/StatusBadge";
 import { EmployeeProfile } from "@/types/employeeProfile";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function EmployeeProfileDetailsPage() {
   const params = useParams();
@@ -55,6 +56,7 @@ export default function EmployeeProfileDetailsPage() {
 
   if (loading) {
     return (
+      <ProtectedRoute>
       <main className="page">
         <div className="page-inner">
           <div className="card">
@@ -76,11 +78,13 @@ export default function EmployeeProfileDetailsPage() {
           </div>
         </div>
       </main>
+      </ProtectedRoute>
     );
   }
 
   if (error) {
     return (
+      <ProtectedRoute>
       <main className="page">
         <div className="page-inner">
           <div className="card">
@@ -92,11 +96,13 @@ export default function EmployeeProfileDetailsPage() {
           </div>
         </div>
       </main>
+      </ProtectedRoute>
     );
   }
 
   if (!employee) {
     return (
+      <ProtectedRoute>
       <main className="page">
         <div className="page-inner">
           <div className="card">
@@ -108,12 +114,14 @@ export default function EmployeeProfileDetailsPage() {
           </div>
         </div>
       </main>
+      </ProtectedRoute>
     );
   }
 
   const fullName = `${employee.firstName} ${employee.lastName}`;
 
   return (
+    <ProtectedRoute>
     <main className="page">
       <div className="page-inner">
         <div className="card">
@@ -311,6 +319,7 @@ export default function EmployeeProfileDetailsPage() {
         </div>
       </div>
     </main>
+    </ProtectedRoute>
   );
 }
 

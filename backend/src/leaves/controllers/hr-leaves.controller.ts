@@ -12,7 +12,7 @@ import {
 import { LeavesService } from '../leaves.service';
 import { LeavesSchedulerService } from '../leaves-scheduler.service';
 
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+//import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { Role } from '../../auth/enums/roles.enum';
@@ -21,9 +21,10 @@ import { ApproveRejectLeaveDto } from '../dto/approve-reject-leave.dto';
 import { ConfigureLeaveTypeDto } from '../dto/configure-leave-type.dto';
 import { ConfigureEntitlementDto } from '../dto/configure-entitlement.dto';
 import { ManualAdjustmentDto } from '../dto/manual-adjustment.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('leaves/hr')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(AuthGuard, RolesGuard)
 @Roles(Role.HR)
 export class HrLeavesController {
   constructor(

@@ -12,16 +12,17 @@ import {
 
 import { LeavesService } from '../leaves.service';
 
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+//import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { Role } from '../../auth/enums/roles.enum';
 
 import { CreateLeaveRequestDto } from '../dto/create-leave-request.dto';
 import { UpdateLeaveRequestDto } from '../dto/update-leave-request.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('leaves/employee')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(AuthGuard, RolesGuard)
 @Roles(Role.EMPLOYEE)
 export class EmployeeLeavesController {
   constructor(private readonly leavesService: LeavesService) {}

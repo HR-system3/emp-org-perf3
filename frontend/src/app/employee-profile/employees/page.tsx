@@ -9,6 +9,7 @@ import BackButton from "@/components/BackButton";
 import Link from "next/link";
 import StatusBadge from "@/components/StatusBadge";
 import Avatar from "@/components/Avatar";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function EmployeesDirectoryPage() {
   const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
@@ -59,6 +60,7 @@ export default function EmployeesDirectoryPage() {
   });
 
   return (
+    <ProtectedRoute allowRoles={["HR", "Admin"]}>
     <main className="page">
       <section className="card">
         <BackButton />
@@ -167,5 +169,6 @@ export default function EmployeesDirectoryPage() {
         </div>
       </section>
     </main>
+    </ProtectedRoute>
   );
 }

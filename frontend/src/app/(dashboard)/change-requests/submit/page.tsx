@@ -7,6 +7,7 @@ import Card from "@/components/common/Card";
 import ChangeRequestForm from "@/components/change-requests/ChangeRequestForm";
 import useAuth from "@/hooks/useAuth";
 import { EmployeeProfileChangeRequest } from "@/types/employeeProfile";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function SubmitChangeRequestPage() {
   const { auth } = useAuth();
@@ -14,6 +15,7 @@ export default function SubmitChangeRequestPage() {
   const [created, setCreated] = useState<EmployeeProfileChangeRequest | null>(null);
 
   return (
+    <ProtectedRoute allowRoles={["Employee", "Manager"]}>
     <Card title="Submit Change Request" subtitle="Employee submits a governed change request (HR approval required).">
       <div className="form-row" style={{ maxWidth: 520 }}>
         <label>EmployeeProfile _id</label>
@@ -36,5 +38,6 @@ export default function SubmitChangeRequestPage() {
         </div>
       )}
     </Card>
+    </ProtectedRoute>
   );
 }

@@ -17,7 +17,13 @@ import {
   import { CreateChangeRequestDto } from './dto/create-change-request.dto';
   import { ProcessChangeRequestDto } from './dto/process-change-request.dto';
   import { ProfileChangeStatus } from './enums/employee-profile.enums';
+  import { UseGuards } from '@nestjs/common';
+  import { AuthGuard } from '../auth/guards/authentication.guard';
+  import { RolesGuard } from '../auth/guards/roles.guard';
+  import { Roles } from '../auth/decorators/roles.decorator';
+  import { Role } from '../auth/enums/roles.enum';
   
+  @UseGuards(AuthGuard, RolesGuard)
   @Controller('employee-profile')
   export class EmployeeProfileController {
     constructor(
@@ -28,6 +34,7 @@ import {
     // HR / System Admin – create & manage profiles
     // ---------------------------------------------------------------------------
   
+    @Roles(Role.HR, Role.ADMIN)
     @Post()
     createEmployee(@Body() dto: CreateEmployeeProfileDto) {
       return this.employeeProfileService.createEmployeeProfile(dto);
@@ -50,6 +57,7 @@ import {
     // Self-Service – employee view/update their own profile
     // ---------------------------------------------------------------------------
   
+    @Roles(Role.EMPLOYEE, Role.MANAGER, Role.HR, Role.ADMIN)
     @Get(':id/self')
     getSelfProfile(@Param('id') id: string) {
       return this.employeeProfileService.getSelfProfile(id);
@@ -67,6 +75,7 @@ import {
     // Manager View – team brief
     // ---------------------------------------------------------------------------
   
+    @Roles(Role.MANAGER)
     @Get('manager/:managerId/team')
     getManagerTeam(@Param('managerId') managerId: string) {
       return this.employeeProfileService.getTeamBrief(managerId);
@@ -76,6 +85,7 @@ import {
     // Change Requests – employee submit + HR process
     // ---------------------------------------------------------------------------
 
+    @Roles(Role.HR, Role.ADMIN)
     @Get('change-requests')
     listChangeRequests(@Query('status') status?: string) {
       // if nothing is passed, list all
@@ -103,6 +113,7 @@ import {
     }
 
   
+    @Roles(Role.HR, Role.ADMIN)
     @Patch('change-requests/:requestId')
     processChangeRequest(
       @Param('requestId') requestId: string,
@@ -118,6 +129,7 @@ import {
     // Roles & access profile
     // ---------------------------------------------------------------------------
   
+    @Roles(Role.HR, Role.ADMIN)
     @Post(':id/roles')
     assignRoles(
       @Param('id') employeeProfileId: string,
