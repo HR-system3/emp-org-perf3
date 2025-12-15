@@ -5,11 +5,13 @@
 import Card from "@/components/common/Card";
 import SelfServiceProfileDemoPage from "@/app/employee-profile/self-demo/page";
 import useAuth from "@/hooks/useAuth";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function MyProfilePage() {
   const { auth } = useAuth();
 
   return (
+    <ProtectedRoute>
     <Card
       title="My Profile (Self-Service)"
       subtitle="Phase I: Employee views profile and updates non-critical fields (email/phone/address/biography)."
@@ -20,5 +22,6 @@ export default function MyProfilePage() {
       {/* Reuse your existing demo page */}
       <SelfServiceProfileDemoPage />
     </Card>
+    </ProtectedRoute>
   );
 }

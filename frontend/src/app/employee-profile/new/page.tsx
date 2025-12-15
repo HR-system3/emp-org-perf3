@@ -14,6 +14,7 @@ import {
   MaritalStatus,
 } from "@/types/employeeProfile";
 import BackButton from "@/components/BackButton";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 const contractTypes: ContractType[] = [
   "FULL_TIME_CONTRACT",
@@ -122,6 +123,7 @@ export default function CreateEmployeePage() {
   }
 
   return (
+    <ProtectedRoute allowRoles={["HR", "Admin"]}>
     <main className="page">
       <div className="card">
         <BackButton />
@@ -388,5 +390,6 @@ export default function CreateEmployeePage() {
         </div>
       )}
     </main>
+    </ProtectedRoute>
   );
 }

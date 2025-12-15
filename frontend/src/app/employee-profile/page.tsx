@@ -10,6 +10,8 @@ import {
   EmployeeProfileChangeRequest,
 } from "@/types/employeeProfile";
 import BackToMainButton from "@/components/BackToMainButton";
+import RoleGate from "@/components/auth/RoleGate";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 type EmployeesOverview = {
   total: number;
@@ -83,6 +85,7 @@ export default function EmployeeProfileHomePage() {
   }, []);
 
   return (
+    <ProtectedRoute>
     <main
       className="page"
       style={{
@@ -146,101 +149,121 @@ export default function EmployeeProfileHomePage() {
           {/* LEFT: list of flows */}
           <div>
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: "0.9rem" }}>
-                <Link
-                  href="/employee-profile/new"
-                  style={{ fontWeight: 600, color: "#60a5fa" }}
-                >
-                  ➤ Create Employee Profile (HR)
-                </Link>
-                <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-                  Onboard a new employee with personal, contract, and
-                  organizational info.
-                </p>
-              </li>
 
-              <li style={{ marginBottom: "0.9rem" }}>
-                <Link
-                  href="/employee-profile/search-by-number"
-                  style={{ fontWeight: 600, color: "#60a5fa" }}
-                >
-                  ➤ Search Employee by Employee Number (HR)
-                </Link>
-                <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-                  Quickly look up an existing employee using their employee
-                  number (e.g., EMP-0012).
-                </p>
-              </li>
+              {/* HR only */}
+              <RoleGate allowRoles={["HR", "Admin"]}>
+                <li style={{ marginBottom: "0.9rem" }}>
+                  <Link
+                    href="/employee-profile/new"
+                    style={{ fontWeight: 600, color: "#60a5fa" }}
+                  >
+                    ➤ Create Employee Profile (HR)
+                  </Link>
+                  <p className="text-muted" style={{ marginTop: "0.25rem" }}>
+                    Onboard a new employee with personal, contract, and
+                    organizational info.
+                  </p>
+                </li>
+              </RoleGate>
 
-              <li style={{ marginBottom: "0.9rem" }}>
-                <Link
-                  href="/employee-profile/self-demo"
-                  style={{ fontWeight: 600, color: "#60a5fa" }}
-                >
-                  ➤ Self-Service Profile (Employee demo)
-                </Link>
-                <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-                  Simulates an employee viewing and editing their own profile via
-                  a self-service screen.
-                </p>
-              </li>
+              {/* HR only */}
+              <RoleGate allowRoles={["HR", "Admin"]}>
+                <li style={{ marginBottom: "0.9rem" }}>
+                  <Link
+                    href="/employee-profile/search-by-number"
+                    style={{ fontWeight: 600, color: "#60a5fa" }}
+                  >
+                    ➤ Search Employee by Employee Number (HR)
+                  </Link>
+                  <p className="text-muted" style={{ marginTop: "0.25rem" }}>
+                    Quickly look up an existing employee using their employee
+                    number (e.g., EMP-0012).
+                  </p>
+                </li>
+              </RoleGate>
 
-              <li style={{ marginBottom: "0.9rem" }}>
-                <Link
-                  href="/employee-profile/change-requests"
-                  style={{ fontWeight: 600, color: "#60a5fa" }}
-                >
-                  ➤ List Change Requests (HR)
-                </Link>
-                <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-                  Review all submitted profile change requests and filter by
-                  status (Pending, Approved, Rejected, Canceled).
-                </p>
-              </li>
+              {/* Employee / Manager */}
+              <RoleGate allowRoles={["Employee", "Manager"]}>
+                <li style={{ marginBottom: "0.9rem" }}>
+                  <Link
+                    href="/employee-profile/self-demo"
+                    style={{ fontWeight: 600, color: "#60a5fa" }}
+                  >
+                    ➤ Self-Service Profile (Employee demo)
+                  </Link>
+                  <p className="text-muted" style={{ marginTop: "0.25rem" }}>
+                    Simulates an employee viewing and editing their own profile via
+                    a self-service screen.
+                  </p>
+                </li>
+              </RoleGate>
 
-             
+              {/* HR / Admin */}
+              <RoleGate allowRoles={["HR", "Admin"]}>
+                <li style={{ marginBottom: "0.9rem" }}>
+                  <Link
+                    href="/employee-profile/change-requests"
+                    style={{ fontWeight: 600, color: "#60a5fa" }}
+                  >
+                    ➤ List Change Requests (HR)
+                  </Link>
+                  <p className="text-muted" style={{ marginTop: "0.25rem" }}>
+                    Review all submitted profile change requests and filter by
+                    status (Pending, Approved, Rejected, Canceled).
+                  </p>
+                </li>
+              </RoleGate>
 
-              <li style={{ marginBottom: "0.9rem" }}>
-                <Link
-                  href="/employee-profile/change-requests/process"
-                  style={{ fontWeight: 600, color: "#60a5fa" }}
-                >
-                  ➤ Process Change Request (HR demo)
-                </Link>
-                <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-                  Process a specific change request by Request ID, update its
-                  status and optionally apply the changes to the employee
-                  profile.
-                </p>
-              </li>
+              {/* HR / Admin */}
+              <RoleGate allowRoles={["HR", "Admin"]}>
+                <li style={{ marginBottom: "0.9rem" }}>
+                  <Link
+                    href="/employee-profile/change-requests/process"
+                    style={{ fontWeight: 600, color: "#60a5fa" }}
+                  >
+                    ➤ Process Change Request (HR demo)
+                  </Link>
+                  <p className="text-muted" style={{ marginTop: "0.25rem" }}>
+                    Process a specific change request by Request ID, update its
+                    status and optionally apply the changes to the employee profile.
+                  </p>
+                </li>
+              </RoleGate>
 
-              <li>
-                <Link
-                  href="/employee-profile/manager-team-demo"
-                  style={{ fontWeight: 600, color: "#60a5fa" }}
-                >
-                  ➤ Manager Team View (demo)
-                </Link>
-                <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-                  Paste a manager&apos;s EmployeeProfile Mongo <code>_id</code>{" "}
-                  to load their direct reports and basic team information.
-                </p>
-              </li>
+                {/* Manager only */}
+                <RoleGate allowRoles={["Manager"]}>
+                  <li>
+                    <Link
+                      href="/employee-profile/manager-team-demo"
+                      style={{ fontWeight: 600, color: "#60a5fa" }}
+                    >
+                      ➤ Manager Team View (demo)
+                    </Link>
+                    <p className="text-muted" style={{ marginTop: "0.25rem" }}>
+                      Paste a manager&apos;s EmployeeProfile Mongo <code>_id</code>{" "}
+                      to load their direct reports and basic team information.
+                    </p>
+                  </li>
+                </RoleGate>
 
-              <li style={{ marginBottom: "0.9rem" }}>
-                <Link
-                  href="/employee-profile/employees"
-                  style={{ fontWeight: 600, color: "#60a5fa" }}
-                >
-                  ➤ Employees Directory (HR)
-                </Link>
-                <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-                  Browse all employees in the system, filter by name/number/
-                  status, and open any profile.
-                </p>
-              </li>
+                {/* HR / Admin */}
+                <RoleGate allowRoles={["HR", "Admin"]}>
+                  <li style={{ marginBottom: "0.9rem" }}>
+                    <Link
+                      href="/employee-profile/employees"
+                      style={{ fontWeight: 600, color: "#60a5fa" }}
+                    >
+                      ➤ Employees Directory (HR)
+                    </Link>
+                    <p className="text-muted" style={{ marginTop: "0.25rem" }}>
+                      Browse all employees in the system, filter by name/number/
+                      status, and open any profile.
+                    </p>
+                  </li>
+                </RoleGate>
+
             </ul>
-          </div>
+           </div>
 
           {/* RIGHT: three small cards stacked */}
           <div
@@ -395,5 +418,6 @@ export default function EmployeeProfileHomePage() {
         </div>
       </section>
     </main>
+    </ProtectedRoute>
   );
 }

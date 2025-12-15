@@ -7,6 +7,7 @@ import Card from "@/components/common/Card";
 import ErrorMessage from "@/components/common/ErrorMessage";
 import { listEmployees } from "@/services/api/employees.service";
 import { listChangeRequests } from "@/services/api/changeRequests.service";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function DashboardPage() {
   const [employeesCount, setEmployeesCount] = useState<number | null>(null);
@@ -30,6 +31,7 @@ export default function DashboardPage() {
   }, []);
 
   return (
+    <ProtectedRoute>
     <Card title="Dashboard" subtitle="Quick overview of Employee Profile module flows (self-service → manager insight → HR approvals).">
       {error && <ErrorMessage message={error} />}
 
@@ -57,5 +59,6 @@ export default function DashboardPage() {
         ✅ Self-service updates (email/phone/address/biography) • ✅ Submit change request • ✅ HR list + approve/reject • ✅ Manager team view (demo)
       </div>
     </Card>
+    </ProtectedRoute>
   );
 }

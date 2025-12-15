@@ -10,6 +10,7 @@ import {
   Address,
 } from "@/types/employeeProfile";
 import BackButton from "@/components/BackButton";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function SelfServiceProfileDemoPage() {
   const [employeeId, setEmployeeId] = useState("");
@@ -92,6 +93,7 @@ export default function SelfServiceProfileDemoPage() {
   }
 
   return (
+    <ProtectedRoute allowRoles={["Employee", "Manager"]}>
     <main style={{ padding: "2rem", maxWidth: 800, margin: "0 auto" }}>
             <BackButton />
       <h1>Self-Service Profile (Demo)</h1>
@@ -199,5 +201,6 @@ export default function SelfServiceProfileDemoPage() {
         </form>
       )}
     </main>
+    </ProtectedRoute>
   );
 }

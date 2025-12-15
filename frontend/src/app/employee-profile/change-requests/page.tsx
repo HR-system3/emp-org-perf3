@@ -11,6 +11,7 @@ import {
 } from "@/types/employeeProfile";
 import BackButton from "@/components/BackButton";
 import StatusBadge from "@/components/StatusBadge";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 const statuses: (ProfileChangeStatus | "ALL")[] = [
   "ALL",
@@ -65,6 +66,7 @@ export default function ChangeRequestsListPage() {
   }, [statusFilter]);
 
   return (
+    <ProtectedRoute allowRoles={["HR", "Admin"]}>
     <main className="page">
       <div className="card">
         <BackButton />
@@ -135,5 +137,6 @@ export default function ChangeRequestsListPage() {
         )}
       </div>
     </main>
+    </ProtectedRoute>
   );
 }

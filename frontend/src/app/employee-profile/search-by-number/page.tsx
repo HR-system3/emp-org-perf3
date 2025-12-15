@@ -8,6 +8,7 @@ import { EmployeeProfile } from "@/types/employeeProfile";
 import BackButton from "@/components/BackButton";
 import Avatar from "@/components/Avatar";
 import StatusBadge from "@/components/StatusBadge";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function SearchByEmployeeNumberPage() {
   const [employeeNumber, setEmployeeNumber] = useState("");
@@ -54,6 +55,7 @@ export default function SearchByEmployeeNumberPage() {
   }
 
   return (
+    <ProtectedRoute allowRoles={["HR", "Admin"]}>
     <main className="page">
       <section
         className="card"
@@ -134,5 +136,6 @@ export default function SearchByEmployeeNumberPage() {
         )}
       </section>
     </main>
+    </ProtectedRoute>
   );
 }

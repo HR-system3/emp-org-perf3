@@ -7,6 +7,7 @@ import { useState } from "react";
 import Card from "@/components/common/Card";
 import ApprovalActions from "@/components/change-requests/ApprovalActions";
 import { EmployeeProfileChangeRequest } from "@/types/employeeProfile";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function ApproveChangeRequestPage() {
   const sp = useSearchParams();
@@ -15,6 +16,7 @@ export default function ApproveChangeRequestPage() {
   const [updated, setUpdated] = useState<EmployeeProfileChangeRequest | null>(null);
 
   return (
+    <ProtectedRoute allowRoles={["HR", "Admin"]}>
     <Card title="Approve / Reject Request (HR)" subtitle="HR processes a request and applies changes when approved.">
       <div className="form-row" style={{ maxWidth: 520 }}>
         <label>Request _id</label>
@@ -40,5 +42,6 @@ export default function ApproveChangeRequestPage() {
         </div>
       )}
     </Card>
+    </ProtectedRoute>
   );
 }

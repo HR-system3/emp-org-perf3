@@ -8,6 +8,7 @@ import { EmployeeProfile } from "@/types/employeeProfile";
 import BackButton from "@/components/BackButton";
 import Avatar from "@/components/Avatar";
 import StatusBadge from "@/components/StatusBadge";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function ManagerTeamDemoPage() {
   const [managerId, setManagerId] = useState("");
@@ -36,6 +37,7 @@ export default function ManagerTeamDemoPage() {
   }
 
   return (
+  <ProtectedRoute allowRoles={["Manager"]}>
     <main className="page">
       <section
         className="card"
@@ -123,5 +125,6 @@ export default function ManagerTeamDemoPage() {
         )}
       </section>
     </main>
+    </ProtectedRoute>
   );
 }
