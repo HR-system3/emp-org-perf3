@@ -1,8 +1,7 @@
-//.src/components/common/Button.tsx 
-
+// ./src/components/common/Button.tsx
 import React from "react";
 
-type ButtonVariant = "primary" | "ghost";
+type ButtonVariant = "primary" | "ghost" | "outline";
 type ButtonSize = "sm" | "md" | "lg";
 
 type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -23,6 +22,7 @@ export default function Button({
   const variants: Record<ButtonVariant, string> = {
     primary: "bg-blue-600 text-white hover:bg-blue-700",
     ghost: "bg-transparent text-gray-700 hover:bg-gray-100",
+    outline: "border border-gray-300 text-gray-800 hover:bg-gray-50",
   };
   const sizes: Record<ButtonSize, string> = {
     sm: "px-3 py-1.5 text-sm",

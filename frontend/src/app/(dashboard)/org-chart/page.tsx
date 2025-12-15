@@ -1,21 +1,18 @@
-'use client';
+// ./src/app/(dashboard)/org-chart/page.tsx
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import Card from '@/components/common/Card';
-import Loading from '@/components/common/Loading';
-import ErrorMessage from '@/components/common/ErrorMessage';
-import { employeesService } from '@/services/api/employees.service';
-import { HierarchyNode } from '@/types/employee.types';
-import OrgNode from '@/components/org-chart/OrgNode';
+import React, { useEffect, useState } from "react";
+import Card from "@/components/common/Card";
+import Loading from "@/components/common/Loading";
+import ErrorMessage from "@/components/common/ErrorMessage";
+import { employeesService } from "@/services/api/employees.service";
+import type { HierarchyNode } from "@/types/employee.types";
+import OrgNode from "@/components/org-chart/OrgNode";
 
 export default function OrgChartPage() {
   const [nodes, setNodes] = useState<HierarchyNode[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadHierarchy();
-  }, []);
 
   const loadHierarchy = async () => {
     try {
@@ -24,11 +21,15 @@ export default function OrgChartPage() {
       const data = await employeesService.getHierarchy();
       setNodes(data);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load organizational hierarchy');
+      setError(err?.response?.data?.message || "Failed to load organizational hierarchy");
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadHierarchy();
+  }, []);
 
   if (isLoading) {
     return <Loading size="lg" text="Loading organizational chart..." />;
@@ -36,13 +37,11 @@ export default function OrgChartPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Organization Chart</h1>
-          <p className="text-gray-600 mt-1">
-            Visualize the organizational hierarchy based on active positions and reporting lines.
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Organization Chart</h1>
+        <p className="text-gray-600 mt-1">
+          Visualize the organizational hierarchy based on active positions and reporting lines.
+        </p>
       </div>
 
       {error && <ErrorMessage message={error} onDismiss={() => setError(null)} />}
@@ -70,5 +69,3 @@ export default function OrgChartPage() {
     </div>
   );
 }
-
-

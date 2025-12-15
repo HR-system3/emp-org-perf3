@@ -1,3 +1,5 @@
+// ./frontend/src/app/(dashboard)/positions/page.tsx
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -318,7 +320,7 @@ export default function PositionsPage() {
                       {pos.title}
                     </td>
                     <td className="px-4 py-2 text-sm text-gray-600">
-                      {pos.department?.name || '—'}
+                      {departments.find((d) => d.id === pos.departmentId)?.name || "—"}
                     </td>
                     <td className="px-4 py-2 text-sm">
                       <span

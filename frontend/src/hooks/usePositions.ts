@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import * as positionsService from '@/services/api/positions.service';
-import { Position } from '@/types/position.types';
+// ./src/hooks/usePositions.ts
+import { useEffect, useState } from "react";
+import { positionsService } from "@/services/api/positions.service";
+import type { Position } from "@/types/position.types";
 
 export function usePositions() {
   const [positions, setPositions] = useState<Position[]>([]);
@@ -11,10 +12,10 @@ export function usePositions() {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await positionsService.GetAllPositions();
+      const data = await positionsService.getAllPositions();
       setPositions(data);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch positions');
+      setError(err?.response?.data?.message || "Failed to fetch positions");
     } finally {
       setIsLoading(false);
     }
@@ -24,14 +25,10 @@ export function usePositions() {
     fetchPositions();
   }, []);
 
-  const refetch = () => {
-    fetchPositions();
-  };
-
   return {
     positions,
     isLoading,
     error,
-    refetch,
+    refetch: fetchPositions,
   };
 }
