@@ -3,8 +3,10 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Button from '@/components/common/Button';
 import ErrorMessage from '@/components/common/ErrorMessage';
+import { authService } from '@/services/api/auth.service';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -23,11 +25,29 @@ export default function LoginForm() {
     }
 
     setIsLoading(true);
-    
-    setTimeout(() => {
-      localStorage.setItem('auth_token', 'demo-token-123');
-      router.push('/dashboard');
-    }, 1000);
+
+    try {
+      const response = await authService.login({ email, password });
+      console.log('Login response:', response);
+      
+      if (response && response.access_token) {
+        authService.setToken(response.access_token);
+        console.log('Token saved, redirecting...');
+        // Use window.location to force a full page reload and clear any cached state
+        window.location.href = '/dashboard';
+      } else {
+        setError('Login failed: No token received from server');
+        setIsLoading(false);
+      }
+    } catch (err: any) {
+      console.error('Login error:', err);
+      const errorMessage = err.response?.data?.message 
+        || err.response?.data?.error 
+        || err.message 
+        || 'Login failed. Please check your credentials and try again.';
+      setError(errorMessage);
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -85,8 +105,11 @@ export default function LoginForm() {
           </Button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-500">
-          Demo: Enter any email and password to login
+        <div className="mt-6 text-center text-sm">
+          <span className="text-gray-600">Don't have an account? </span>
+          <Link href="/register" className="text-blue-600 hover:text-blue-700 font-medium">
+            Sign up
+          </Link>
         </div>
       </div>
     </div>

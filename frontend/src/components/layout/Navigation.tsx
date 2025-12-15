@@ -25,6 +25,14 @@ const navItems = [
   { name: 'Self-Service Demo', href: '/employee-profile/self-demo', icon: '👨‍💼' },
   { name: 'Manager Team Demo', href: '/employee-profile/manager-team-demo', icon: '👥' },
   
+  // Performance Management Section
+  { section: 'Performance Management' },
+  { name: 'Templates', href: ROUTES.PERFORMANCE_TEMPLATES, icon: '📋' },
+  { name: 'Cycles', href: ROUTES.PERFORMANCE_CYCLES, icon: '🔄' },
+  { name: 'Assignments', href: ROUTES.PERFORMANCE_ASSIGNMENTS, icon: '📝' },
+  { name: 'Records', href: ROUTES.PERFORMANCE_RECORDS, icon: '📊' },
+  { name: 'Disputes', href: ROUTES.PERFORMANCE_DISPUTES, icon: '⚖️' },
+  
   // Personal
   { section: 'Personal' },
   { name: 'My Team', href: ROUTES.MY_TEAM, icon: '👥' },
@@ -35,7 +43,7 @@ export default function Navigation() {
   const pathname = usePathname();
 
   return (
-    <nav className="w-64 bg-white border-r border-gray-200 min-h-screen p-4 overflow-y-auto">
+    <nav className="h-full w-full bg-white border-r border-gray-200 p-4 overflow-y-auto">
       <div className="mb-8">
         <Link href="/" className="block">
           <h1 className="text-2xl font-bold text-blue-600">HR System</h1>

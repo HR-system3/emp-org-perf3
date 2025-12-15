@@ -17,11 +17,27 @@ export function useAuth() {
     try {
       const token = authService.getToken();
       if (token) {
-        const userData = await authService.getProfile();
-        setUser(userData);
-        setIsAuthenticated(true);
+        try {
+          const userData = await authService.getProfile();
+          setUser(userData);
+          setIsAuthenticated(true);
+        } catch (profileError: any) {
+          console.error('Profile fetch error:', profileError);
+          // If token is invalid/expired, remove it
+          if (profileError.response?.status === 401) {
+            authService.removeToken();
+            setUser(null);
+            setIsAuthenticated(false);
+          } else {
+            // For other errors, still consider authenticated if token exists
+            setIsAuthenticated(true);
+          }
+        }
+      } else {
+        setIsAuthenticated(false);
       }
     } catch (error) {
+      console.error('Auth check error:', error);
       authService.removeToken();
       setUser(null);
       setIsAuthenticated(false);
