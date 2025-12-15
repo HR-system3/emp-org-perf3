@@ -2,6 +2,7 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost
 
 export const ROUTES = {
   LOGIN: '/login',
+  REGISTER: '/register',
   DASHBOARD: '/dashboard',
   DEPARTMENTS: '/departments',
   POSITIONS: '/positions',
@@ -11,6 +12,11 @@ export const ROUTES = {
   ORG_CHART: '/org-chart',
   PROFILE: '/profile',
   MY_TEAM: '/my-team',
+  PERFORMANCE_TEMPLATES: '/performance/templates',
+  PERFORMANCE_CYCLES: '/performance/cycles',
+  PERFORMANCE_ASSIGNMENTS: '/performance/assignments',
+  PERFORMANCE_RECORDS: '/performance/records',
+  PERFORMANCE_DISPUTES: '/performance/disputes',
 };
 
 export const CHANGE_REQUEST_STATUS_COLORS = {

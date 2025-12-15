@@ -2,12 +2,12 @@
 
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import api from "@/lib/axios";
-import Button from "@/components/common/Button";
-import Card from "@/components/common/Card";
-import ErrorMessage from "@/components/common/ErrorMessage";
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Button from '@/components/common/Button';
+import ErrorMessage from '@/components/common/ErrorMessage';
+import { authService } from '@/services/api/auth.service';
 
 type Props = {
   redirectTo?: string;
@@ -53,34 +53,31 @@ export default function LoginForm({ redirectTo = "/dashboard" }: Props) {
        */
       const res = await api.post("/auth/login", { email, password });
 
-      const data = res.data || {};
-      const resolvedUserId =
-        data.userId || data?.user?._id || data?.user?.id || userId || "";
-      const resolvedRole =
-        data.role || data?.user?.role || role || "Employee";
+    setIsLoading(true);
 
-      localStorage.setItem(
-        "hr_auth",
-        JSON.stringify({
-          role: resolvedRole,
-          userId: resolvedUserId,
-          email,
-          loggedInAt: new Date().toISOString(),
-        })
-      );
-
-      router.push(redirectTo);
+    try {
+      const response = await authService.login({ email, password });
+      console.log('Login response:', response);
+      
+      if (response && response.access_token) {
+        authService.setToken(response.access_token);
+        console.log('Token saved, redirecting...');
+        // Use window.location to force a full page reload and clear any cached state
+        window.location.href = '/dashboard';
+      } else {
+        setError('Login failed: No token received from server');
+        setIsLoading(false);
+      }
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.response?.data ||
-        err?.message ||
-        "Login failed. Use Demo Login if backend auth is not ready.";
-      setError(typeof msg === "string" ? msg : JSON.stringify(msg));
-    } finally {
-      setLoading(false);
+      console.error('Login error:', err);
+      const errorMessage = err.response?.data?.message 
+        || err.response?.data?.error 
+        || err.message 
+        || 'Login failed. Please check your credentials and try again.';
+      setError(errorMessage);
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Card title="Login" subtitle="Use backend login if available, or Demo Login for Milestone 3.">
@@ -118,13 +115,11 @@ export default function LoginForm({ redirectTo = "/dashboard" }: Props) {
 
         {error && <ErrorMessage message={error} />}
 
-        <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-          <Button type="submit" disabled={loading}>
-            {loading ? "Signing in..." : "Sign in (Backend)"}
-          </Button>
-          <Button type="button" variant="ghost" onClick={handleDemoLogin} disabled={loading}>
-            Continue (Demo)
-          </Button>
+        <div className="mt-6 text-center text-sm">
+          <span className="text-gray-600">Don't have an account? </span>
+          <Link href="/register" className="text-blue-600 hover:text-blue-700 font-medium">
+            Sign up
+          </Link>
         </div>
       </form>
     </Card>

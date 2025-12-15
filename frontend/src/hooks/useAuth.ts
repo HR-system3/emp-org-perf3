@@ -31,10 +31,66 @@ export default function useAuth() {
     setAuth(getAuth());
   }, []);
 
-  function logout() {
-    localStorage.removeItem("hr_auth");
-    setAuth(null);
-  }
+  const checkAuth = async () => {
+    try {
+      const token = authService.getToken();
+      if (token) {
+        try {
+          const userData = await authService.getProfile();
+          setUser(userData);
+          setIsAuthenticated(true);
+        } catch (profileError: any) {
+          console.error('Profile fetch error:', profileError);
+          // If token is invalid/expired, remove it
+          if (profileError.response?.status === 401) {
+            authService.removeToken();
+            setUser(null);
+            setIsAuthenticated(false);
+          } else {
+            // For other errors, still consider authenticated if token exists
+            setIsAuthenticated(true);
+          }
+        }
+      } else {
+        setIsAuthenticated(false);
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+      authService.removeToken();
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  return { auth, setAuth, logout };
+  const login = async (credentials: LoginRequest) => {
+    try {
+      const response = await authService.login(credentials);
+      authService.setToken(response.access_token);
+      setUser(response.user);
+      setIsAuthenticated(true);
+      router.push('/dashboard');
+      return { success: true };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Login failed',
+      };
+    }
+  };
+
+  const logout = () => {
+    authService.logout();
+    setUser(null);
+    setIsAuthenticated(false);
+  };
+
+  return {
+    user,
+    isLoading,
+    isAuthenticated,
+    login,
+    logout,
+  };
 }
