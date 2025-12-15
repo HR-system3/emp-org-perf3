@@ -49,9 +49,12 @@ export default function DashboardPage() {
     <div className="max-w-7xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Overview of your organization</p>
+        <p className="text-gray-600 mt-2">
+          Overview of Organization Structure, Employee Profiles, and Performance
+        </p>
       </div>
 
+      {/* Top summary stats - Organization */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card className="hover:shadow-lg transition-shadow">
           <Link href={ROUTES.DEPARTMENTS}>
@@ -84,47 +87,107 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card title="Quick Actions">
+      {/* Three domain sections: Organization, Employee Profile, Performance */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Organization Structure Section */}
+        <Card title="Organization Structure">
           <div className="space-y-3">
             <Link
-              href={ROUTES.SUBMIT_CHANGE_REQUEST}
+              href={ROUTES.DEPARTMENTS}
               className="block p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
             >
-              <h4 className="font-medium text-blue-900">Submit Change Request</h4>
-              <p className="text-sm text-blue-700">Request organizational changes</p>
+              <h4 className="font-medium text-blue-900">Manage Departments</h4>
+              <p className="text-sm text-blue-700">Create and update departments</p>
+            </Link>
+            <Link
+              href={ROUTES.POSITIONS}
+              className="block p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+            >
+              <h4 className="font-medium text-indigo-900">Manage Positions</h4>
+              <p className="text-sm text-indigo-700">Create, delimit, and deactivate positions</p>
             </Link>
             <Link
               href={ROUTES.ORG_CHART}
               className="block p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
             >
               <h4 className="font-medium text-green-900">View Org Chart</h4>
-              <p className="text-sm text-green-700">Visualize organization hierarchy</p>
+              <p className="text-sm text-green-700">Visualize hierarchy</p>
             </Link>
             <Link
-              href={ROUTES.MY_TEAM}
-              className="block p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
+              href={ROUTES.CHANGE_REQUESTS}
+              className="block p-3 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors"
             >
-              <h4 className="font-medium text-purple-900">My Team</h4>
-              <p className="text-sm text-purple-700">View your direct reports</p>
+              <h4 className="font-medium text-yellow-900">Change Requests</h4>
+              <p className="text-sm text-yellow-700">Submit and approve structural changes</p>
             </Link>
           </div>
         </Card>
 
-        <Card title="System Information">
-          <div className="space-y-4">
-            <div className="flex justify-between items-center pb-3 border-b">
-              <span className="text-gray-600">Total Departments</span>
-              <span className="font-semibold text-gray-900">{stats.departments}</span>
-            </div>
-            <div className="flex justify-between items-center pb-3 border-b">
-              <span className="text-gray-600">Total Positions</span>
-              <span className="font-semibold text-gray-900">{stats.positions}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Pending Approvals</span>
-              <span className="font-semibold text-yellow-600">{stats.pendingRequests}</span>
-            </div>
+        {/* Employee Profile Section */}
+        <Card title="Employee Profile">
+          <div className="space-y-3">
+            <Link
+              href="/employee-profile/new"
+              className="block p-3 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors"
+            >
+              <h4 className="font-medium text-emerald-900">Create Employee</h4>
+              <p className="text-sm text-emerald-700">Create employee master record</p>
+            </Link>
+            <Link
+              href="/employee-profile/search-by-number"
+              className="block p-3 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors"
+            >
+              <h4 className="font-medium text-teal-900">Search Employee</h4>
+              <p className="text-sm text-teal-700">Find employees by number</p>
+            </Link>
+            <Link
+              href="/employee-profile/change-requests"
+              className="block p-3 bg-sky-50 rounded-lg hover:bg-sky-100 transition-colors"
+            >
+              <h4 className="font-medium text-sky-900">Profile Change Requests</h4>
+              <p className="text-sm text-sky-700">Review profile update requests</p>
+            </Link>
+            <Link
+              href="/employee-profile/manager-team-demo"
+              className="block p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
+            >
+              <h4 className="font-medium text-purple-900">Manager Team View</h4>
+              <p className="text-sm text-purple-700">View your team’s profiles</p>
+            </Link>
+          </div>
+        </Card>
+
+        {/* Performance Management Section */}
+        <Card title="Performance Management">
+          <div className="space-y-3">
+            <Link
+              href="/performance/templates"
+              className="block p-3 bg-pink-50 rounded-lg hover:bg-pink-100 transition-colors"
+            >
+              <h4 className="font-medium text-pink-900">Appraisal Templates</h4>
+              <p className="text-sm text-pink-700">Define templates and criteria</p>
+            </Link>
+            <Link
+              href="/performance/cycles"
+              className="block p-3 bg-rose-50 rounded-lg hover:bg-rose-100 transition-colors"
+            >
+              <h4 className="font-medium text-rose-900">Appraisal Cycles</h4>
+              <p className="text-sm text-rose-700">Plan and monitor cycles</p>
+            </Link>
+            <Link
+              href="/performance/records"
+              className="block p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors"
+            >
+              <h4 className="font-medium text-orange-900">Appraisal Records</h4>
+              <p className="text-sm text-orange-700">Manager and employee appraisals</p>
+            </Link>
+            <Link
+              href="/performance/disputes"
+              className="block p-3 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+            >
+              <h4 className="font-medium text-red-900">Disputes</h4>
+              <p className="text-sm text-red-700">Track and resolve appraisal disputes</p>
+            </Link>
           </div>
         </Card>
       </div>

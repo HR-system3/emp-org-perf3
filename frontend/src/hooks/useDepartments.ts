@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Department } from '@/types/department.types';
+import { departmentsService } from '@/services/api/departments.service';
 
 export function useDepartments() {
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -10,7 +11,8 @@ export function useDepartments() {
     try {
       setIsLoading(true);
       setError(null);
-      setDepartments([]);
+      const data = await departmentsService.getAllDepartments();
+      setDepartments(data);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch departments');
     } finally {

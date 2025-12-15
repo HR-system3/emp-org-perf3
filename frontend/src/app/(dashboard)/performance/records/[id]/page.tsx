@@ -141,7 +141,10 @@ export default function RecordDetailsPage() {
   const canEdit = record.status === AppraisalRecordStatus.DRAFT;
   const canSubmit = record.status === AppraisalRecordStatus.DRAFT;
   const canPublish = record.status === AppraisalRecordStatus.MANAGER_SUBMITTED;
-  const canAcknowledge = record.status === AppraisalRecordStatus.HR_PUBLISHED && !record.employeeAcknowledgedAt;
+  const canAcknowledge =
+    record.status === AppraisalRecordStatus.HR_PUBLISHED && !record.employeeAcknowledgedAt;
+  // Employee can raise dispute on a published appraisal
+  const canRaiseDispute = record.status === AppraisalRecordStatus.HR_PUBLISHED;
 
   return (
     <div className="space-y-6">
@@ -323,7 +326,7 @@ export default function RecordDetailsPage() {
         )}
 
         <Card>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4 items-start">
             {isEditing && canEdit ? (
               <>
                 <Button onClick={handleUpdate} isLoading={saving}>
@@ -372,6 +375,18 @@ export default function RecordDetailsPage() {
                       Acknowledge
                     </Button>
                   </div>
+                )}
+                {canRaiseDispute && (
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      router.push(
+                        `/performance/disputes/new?appraisalId=${record._id}&assignmentId=${record.assignmentId}&cycleId=${record.cycleId}&employeeId=${record.employeeProfileId}`,
+                      )
+                    }
+                  >
+                    Raise Dispute
+                  </Button>
                 )}
               </>
             )}

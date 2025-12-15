@@ -5,8 +5,8 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Organization Management System',
-  description: 'Manage your organization structure, departments, and positions',
+  title: 'HR Management System',
+  description: 'End-to-end HR management: organization structure, employee profiles, and performance',
 };
 
 export default function RootLayout({
