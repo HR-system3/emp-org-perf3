@@ -53,6 +53,10 @@ export interface EmployeeProfile {
   dateOfHire: string;
   contractType?: ContractType;
   status: EmployeeStatus;
+  // Soft deactivation flags (backend audit)
+  isActive?: boolean;
+  deactivatedAt?: string;
+  deactivationReason?: string;
   biography?: string;
   address?: Address;
   payGradeId?: any;
@@ -70,8 +74,8 @@ export interface CreateEmployeeProfileDto {
   dateOfBirth: string;
   dateOfHire: string;
   contractType: ContractType;
-  positionTitle: string;
-  departmentName: string;
+  positionTitle?: string;
+  departmentName?: string;
   departmentCode?: string;
   payGradeId?: string;
   gender?: Gender;

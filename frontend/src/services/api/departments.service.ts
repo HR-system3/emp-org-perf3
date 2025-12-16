@@ -1,4 +1,4 @@
-import axiosInstance from './axios.config';
+import { api } from '@/lib/axios';
 import {
   Department,
   CreateDepartmentDTO,
@@ -25,21 +25,21 @@ function mapDepartment(api: DepartmentApi): Department {
 
 export const departmentsService = {
   async getAllDepartments(): Promise<Department[]> {
-    const response = await axiosInstance.get<DepartmentApi[]>(
+    const response = await api.get<DepartmentApi[]>(
       '/organization-structure/departments',
     );
     return response.data.map(mapDepartment);
   },
 
   async getDepartmentById(id: string): Promise<Department> {
-    const response = await axiosInstance.get<DepartmentApi>(
+    const response = await api.get<DepartmentApi>(
       `/organization-structure/departments/${id}`,
     );
     return mapDepartment(response.data);
   },
 
   async createDepartment(dto: CreateDepartmentDTO): Promise<Department> {
-    const response = await axiosInstance.post<DepartmentApi>(
+    const response = await api.post<DepartmentApi>(
       '/organization-structure/departments',
       dto,
     );
@@ -50,7 +50,7 @@ export const departmentsService = {
     id: string,
     dto: UpdateDepartmentDTO,
   ): Promise<Department> {
-    const response = await axiosInstance.put<DepartmentApi>(
+    const response = await api.put<DepartmentApi>(
       `/organization-structure/departments/${id}`,
       dto,
     );

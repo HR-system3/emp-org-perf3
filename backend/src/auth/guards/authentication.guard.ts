@@ -47,15 +47,18 @@ import {
     private extractToken(req: Request): string | undefined {
       // 1) from cookie (after cookie-parser)
       if ((req as any).cookies?.token) {
+        console.log('[AuthGuard] Token found in cookie');
         return (req as any).cookies.token;
       }
   
       // 2) from Authorization: Bearer <token>
       const authHeader = req.headers['authorization'];
       if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+        console.log('[AuthGuard] Token found in Authorization header');
         return authHeader.slice(7);
       }
   
+      console.log('[AuthGuard] No token found. Cookies:', (req as any).cookies, 'Auth header:', authHeader);
       return undefined;
     }
   }

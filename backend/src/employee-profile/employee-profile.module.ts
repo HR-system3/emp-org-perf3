@@ -20,6 +20,8 @@ import {
   EmployeeQualification,
   EmployeeQualificationSchema,
 } from './models/qualification.schema';
+import { UsersModule } from '../users/users.module';
+import { Position, PositionSchema } from '../organization-structure/models/position.schema';
 
 @Module({
   imports: [
@@ -32,7 +34,9 @@ import {
         schema: EmployeeProfileChangeRequestSchema,
       },
       { name: EmployeeQualification.name, schema: EmployeeQualificationSchema },
+      { name: Position.name, schema: PositionSchema },
     ]),
+    UsersModule,
   ],
   controllers: [EmployeeProfileController],
   providers: [EmployeeProfileService],

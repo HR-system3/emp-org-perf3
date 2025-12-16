@@ -1,9 +1,25 @@
 // ./src/employee-profile/dto/self-service-update-profile.dto.ts
+import {
+  IsOptional,
+  IsString,
+  IsEmail,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
 
 export class AddressDto {
-    city?: string;
-    streetAddress?: string;
-    country?: string;
+   @IsOptional()
+   @IsString()
+   city?: string;
+
+   @IsOptional()
+   @IsString()
+   streetAddress?: string;
+
+   @IsOptional()
+   @IsString()
+   country?: string;
   }
   
   /**
@@ -11,11 +27,29 @@ export class AddressDto {
    * Maps to BR 2g, 2n, 2o and US-E2-05 / US-E2-12.
    */
   export class SelfServiceUpdateProfileDto {
-    personalEmail?: string;
-    mobilePhone?: string;
-    homePhone?: string;
-    biography?: string;
-    profilePictureUrl?: string;
-    address?: AddressDto;
+  @IsOptional()
+  @IsEmail()
+  personalEmail?: string;
+
+  @IsOptional()
+  @IsString()
+  mobilePhone?: string;
+
+  @IsOptional()
+  @IsString()
+  homePhone?: string;
+
+  @IsOptional()
+  @IsString()
+  biography?: string;
+
+  @IsOptional()
+  @IsString()
+  profilePictureUrl?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => AddressDto)
+  address?: AddressDto;
   }
   

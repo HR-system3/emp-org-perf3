@@ -17,6 +17,9 @@ export class User {
 
   @Prop({ type: String, default: 'EMPLOYEE' })
   role: string;
+
+  @Prop({ type: Boolean, default: true })
+  isActive: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

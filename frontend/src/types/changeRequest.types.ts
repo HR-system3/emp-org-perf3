@@ -1,53 +1,52 @@
-export enum ChangeRequestStatus {
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
-}
+// UI-facing status values mapped from backend StructureRequestStatus
+export type ChangeRequestStatus =
+  | 'DRAFT'
+  | 'SUBMITTED'
+  | 'UNDER_REVIEW'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'CANCELED'
+  | 'IMPLEMENTED';
 
+// High-level request categories exposed in the UI
 export enum ChangeRequestType {
-  DEPARTMENT_CREATE = 'DEPARTMENT_CREATE',
-  DEPARTMENT_UPDATE = 'DEPARTMENT_UPDATE',
-  DEPARTMENT_DELETE = 'DEPARTMENT_DELETE',
-  POSITION_CREATE = 'POSITION_CREATE',
-  POSITION_UPDATE = 'POSITION_UPDATE',
-  POSITION_DELETE = 'POSITION_DELETE',
-  POSITION_DEACTIVATE = 'POSITION_DEACTIVATE',
+  POSITION_CHANGE = 'POSITION_CHANGE',
+  DEPARTMENT_CHANGE = 'DEPARTMENT_CHANGE',
+  TRANSFER = 'TRANSFER',
 }
 
+// Normalised shape used by the frontend, mapped from StructureChangeRequest
 export interface ChangeRequest {
   id: string;
+  requestNumber: string;
   type: ChangeRequestType;
   status: ChangeRequestStatus;
-  requestedBy: string;
-  requestedByUser?: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  targetEntityId?: string;
-  targetEntityType?: string;
-  changes: Record<string, any>;
   reason?: string;
-  approvedBy?: string;
-  approvedByUser?: {
-    id: string;
-    name: string;
-  };
-  rejectionReason?: string;
+  details?: string;
+  // Targets
+  targetDepartmentId?: string;
+  targetPositionId?: string;
+  // For position/transfer changes
+  departmentId?: string;
+  reportingTo?: string;
   createdAt: string;
   updatedAt: string;
-  approvedAt?: string;
 }
 
+// Payload from the submit form. We keep it UI‑oriented and map it to the
+// backend DTO in the API service.
 export interface CreateChangeRequestDTO {
   type: ChangeRequestType;
-  targetEntityId?: string;
-  targetEntityType?: string;
-  changes: Record<string, any>;
-  reason?: string;
+  positionId?: string;
+  sourceDepartmentId?: string;
+  targetDepartmentId?: string;
+  reportingToPositionId?: string;
+  reason: string;
+  details?: string;
 }
 
+// Approval payload mapped to backend ApproveChangeRequestDto
 export interface ApprovalDTO {
-  approved: boolean;
-  reason?: string;
+  decision: 'APPROVED' | 'REJECTED';
+  comments?: string;
 }

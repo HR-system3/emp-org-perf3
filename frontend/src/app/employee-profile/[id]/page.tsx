@@ -11,11 +11,14 @@ import Button from '@/components/common/Button';
 import Loading from '@/components/common/Loading';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import { EmployeeProfile } from '@/types/employeeProfile';
+import { useAuth } from '@/hooks/useAuth';
+import { hasPermission } from '@/lib/rolePermissions';
 
 export default function EmployeeProfileDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const employeeId = params.id as string;
+  const { user } = useAuth();
 
   const [employee, setEmployee] = useState<EmployeeProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -94,6 +97,51 @@ export default function EmployeeProfileDetailsPage() {
   }
 
   const fullName = `${employee.firstName} ${employee.lastName}`;
+  const canManageEmployee = hasPermission(user?.role || '', 'canUpdateEmployee');
+
+  async function handleDeactivate() {
+    if (!canManageEmployee) {
+      setError('You do not have permission to deactivate employees.');
+      return;
+    }
+    if (
+      !confirm(
+        'Are you sure you want to deactivate this employee? This will mark them as INACTIVE.',
+      )
+    ) {
+      return;
+    }
+
+    const reason =
+      prompt('Enter deactivation reason (optional):')?.trim() || undefined;
+
+    try {
+      setLoading(true);
+      setError(null);
+      await api.patch(`/employee-profile/${employee._id}/deactivate`, {
+        reason,
+      });
+      // Reload profile to reflect new status
+      const res = await api.get<EmployeeProfile>(
+        `/employee-profile/${employee._id}`,
+      );
+      setEmployee(res.data);
+    } catch (err: any) {
+      console.error('Failed to deactivate employee', err);
+      const backendMessage =
+        err?.response?.data?.message ||
+        err?.response?.data ||
+        err?.message ||
+        'Failed to deactivate employee.';
+      setError(
+        typeof backendMessage === 'string'
+          ? backendMessage
+          : JSON.stringify(backendMessage),
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -119,8 +167,23 @@ export default function EmployeeProfileDetailsPage() {
               Employee #{employee.employeeNumber || '—'}
             </p>
           </div>
-          <div>
+          <div className="flex flex-col items-end gap-2">
             <StatusBadge kind="employee" value={employee.status} />
+            {employee.deactivatedAt && (
+              <p className="text-xs text-red-600">
+                Deactivated on{' '}
+                {new Date(employee.deactivatedAt).toLocaleDateString()}
+              </p>
+            )}
+            {canManageEmployee && employee.status !== 'INACTIVE' && (
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={handleDeactivate}
+              >
+                Deactivate Employee
+              </Button>
+            )}
           </div>
         </div>
       </Card>
@@ -201,13 +264,15 @@ export default function EmployeeProfileDetailsPage() {
             />
           </dl>
 
-          <div className="mt-6">
-            <Link href={`/employee-profile/${employee._id}/change-requests/new`}>
-              <Button variant="outline" size="sm">
-                Request Profile Change
-              </Button>
-            </Link>
-          </div>
+          {hasPermission(user?.role || '', 'canSubmitChangeRequests') && (
+            <div className="mt-6">
+              <Link href={`/employee-profile/${employee._id}/change-requests/new`}>
+                <Button variant="outline" size="sm">
+                  Request Profile Change
+                </Button>
+              </Link>
+            </div>
+          )}
         </Card>
       </div>
 

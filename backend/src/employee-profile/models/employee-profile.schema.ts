@@ -64,6 +64,19 @@ export class EmployeeProfile extends UserProfileBase {
   @Prop({ type: Date, default: () => new Date() })
   statusEffectiveFrom?: Date;
 
+  // Soft-deactivation flags & audit trail (HR action)
+  @Prop({ type: Boolean, default: true })
+  isActive?: boolean;
+
+  @Prop({ type: Date })
+  deactivatedAt?: Date;
+
+  @Prop({ type: String })
+  deactivationReason?: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'EmployeeProfile' })
+  deactivatedByEmployeeId?: Types.ObjectId;
+
   // Org Structure links
   @Prop({ type: Types.ObjectId, ref: 'Position' })
   primaryPositionId?: Types.ObjectId;

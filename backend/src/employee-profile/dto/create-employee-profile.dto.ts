@@ -7,6 +7,7 @@ import {
   IsEnum,
   IsDateString,
   IsMongoId,
+  ValidateIf,
 } from 'class-validator';
 import {
   ContractType,
@@ -72,6 +73,7 @@ export class CreateEmployeeProfileDto {
    * Reference to PayrollConfiguration.payGrade document
    * (ObjectId as string)
    */
+  @ValidateIf((o) => o.payGradeId !== undefined && o.payGradeId !== null && o.payGradeId !== '')
   @IsMongoId()
   @IsOptional()
   payGradeId?: string;

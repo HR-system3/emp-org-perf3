@@ -49,10 +49,10 @@ export default function OrgChartPage() {
 
       <Card>
         {nodes.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <p>No hierarchy data available.</p>
+          <div className="text-center py-10 text-gray-500">
+            <p className="text-lg font-medium">No reporting lines configured yet.</p>
             <p className="text-sm mt-2">
-              Make sure positions are created and linked to departments and managers.
+              Create active positions and set their <code>reportsToPositionId</code> to visualize the organization chart.
             </p>
           </div>
         ) : (

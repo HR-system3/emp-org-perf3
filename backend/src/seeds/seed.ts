@@ -1,3 +1,5 @@
+//./src/seeds/seed.ts
+
 import mongoose from 'mongoose';
 import * as dotenv from 'dotenv';
 import { seedOrganizationStructure } from '../organization-structure/seed';

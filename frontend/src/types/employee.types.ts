@@ -1,3 +1,5 @@
+//./src/types/employee.types.ts
+
 export interface Employee {
   id: string;
   name: string;
