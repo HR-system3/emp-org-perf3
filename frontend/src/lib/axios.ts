@@ -15,6 +15,13 @@ api.interceptors.request.use(
     const token = localStorage.getItem('auth_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('[Axios] Token added to request:', {
+        url: config.url,
+        hasToken: !!token,
+        tokenLength: token.length,
+      });
+    } else {
+      console.warn('[Axios] No token found in localStorage for request:', config.url);
     }
     return config;
   },

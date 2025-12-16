@@ -14,6 +14,7 @@ import { PayrollExecutionModule } from './payroll-execution/payroll-execution.mo
 import { DatabaseModule } from './database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { SystemAdminModule } from './system-admin/system-admin.module';
 
 
 
@@ -31,6 +32,7 @@ import { UsersModule } from './users/users.module';
     EmployeeProfileModule,
     OrganizationStructureModule,
     PerformanceModule,
+    SystemAdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

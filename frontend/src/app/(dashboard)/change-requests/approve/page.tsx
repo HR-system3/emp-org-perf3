@@ -16,7 +16,7 @@ export default function ApproveChangeRequestsPage() {
   const [requests, setRequests] = useState<ChangeRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [processingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPendingRequests();
@@ -34,36 +34,6 @@ export default function ApproveChangeRequestsPage() {
     }
   };
 
-  const handleApprove = async (requestId: string) => {
-    try {
-      setProcessingId(requestId);
-      await changeRequestsService.approveChangeRequest(requestId, { approved: true });
-      fetchPendingRequests();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to approve request');
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  const handleReject = async (requestId: string) => {
-    const reason = prompt('Enter rejection reason:');
-    if (!reason) return;
-
-    try {
-      setProcessingId(requestId);
-      await changeRequestsService.approveChangeRequest(requestId, {
-        approved: false,
-        reason,
-      });
-      fetchPendingRequests();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to reject request');
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
   if (isLoading) {
     return <Loading size="lg" text="Loading pending requests..." />;
   }
@@ -78,7 +48,9 @@ export default function ApproveChangeRequestsPage() {
 
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Approve Change Requests</h1>
-        <p className="text-gray-600 mt-2">Review and approve pending change requests</p>
+        <p className="text-gray-600 mt-2">
+          Review pending change requests and click into a request to approve or reject it.
+        </p>
       </div>
 
       {error && (
@@ -106,22 +78,13 @@ export default function ApproveChangeRequestsPage() {
                     </h3>
                     <div className="space-y-2 text-sm text-gray-600">
                       <p>
-                        <span className="font-medium">Requested by:</span>{' '}
-                        {request.requestedByUser?.name || request.requestedBy}
-                      </p>
-                      <p>
-                        <span className="font-medium">Date:</span>{' '}
+                        <span className="font-medium">Requested on:</span>{' '}
                         {formatDateTime(request.createdAt)}
                       </p>
-                      {request.targetEntityId && (
-                        <p>
-                          <span className="font-medium">Target:</span> {request.targetEntityId}
-                        </p>
-                      )}
                     </div>
                   </div>
                   <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
-                    PENDING
+                    SUBMITTED
                   </span>
                 </div>
 
@@ -130,28 +93,12 @@ export default function ApproveChangeRequestsPage() {
                   <p className="text-gray-600">{request.reason || 'No reason provided'}</p>
                 </div>
 
-                <div className="pt-4 border-t border-gray-200">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Proposed Changes:</p>
-                  <pre className="bg-gray-50 p-3 rounded text-xs overflow-x-auto">
-                    {JSON.stringify(request.changes, null, 2)}
-                  </pre>
-                </div>
-
                 <div className="flex gap-3 pt-4 border-t border-gray-200">
                   <Button
                     variant="primary"
-                    onClick={() => handleApprove(request.id)}
-                    isLoading={processingId === request.id}
-                    disabled={!!processingId}
+                    onClick={() => router.push(`/change-requests/${request.id}`)}
                   >
-                    ✓ Approve
-                  </Button>
-                  <Button
-                    variant="danger"
-                    onClick={() => handleReject(request.id)}
-                    disabled={!!processingId}
-                  >
-                    ✗ Reject
+                    Review &amp; decide
                   </Button>
                 </div>
               </div>

@@ -1,7 +1,7 @@
 // ./src/employee-profile/employee-profile.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { FilterQuery } from 'mongoose';
 
 import {
@@ -28,6 +28,10 @@ import { UpdateEmployeeProfileDto } from './dto/update-employee-profile.dto';
 import { SelfServiceUpdateProfileDto } from './dto/self-service-update-profile.dto';
 import { CreateChangeRequestDto } from './dto/create-change-request.dto';
 import { ProcessChangeRequestDto } from './dto/process-change-request.dto';
+import {
+  Position,
+  PositionDocument,
+} from '../organization-structure/models/position.schema';
 
 @Injectable()
 export class EmployeeProfileService {
@@ -40,7 +44,28 @@ export class EmployeeProfileService {
 
     @InjectModel(EmployeeProfileChangeRequest.name)
     private readonly changeRequestModel: Model<EmployeeProfileChangeRequestDocument>,
+
+    @InjectModel(Position.name)
+    private readonly positionModel: Model<PositionDocument>,
   ) {}
+
+  /**
+   * Normalize a value that may come in as:
+   * - A valid ObjectId
+   * - A plain 24-char hex string
+   * - A string like ObjectId("...") from legacy data
+   * Returns a clean hex string or null if invalid.
+   */
+  private normalizeObjectId(value?: unknown): string | null {
+    if (!value) return null;
+    const str = String(value).trim();
+
+    // Handle strings like ObjectId("abcdef...") or ObjectId('abcdef...')
+    const match = str.match(/ObjectId\(["']?([0-9a-fA-F]{24})["']?\)/);
+    const candidate = match ? match[1] : str;
+
+    return Types.ObjectId.isValid(candidate) ? candidate : null;
+  }
 
   // ---------------------------------------------------------------------------
   // EMPLOYEE PROFILE CRUD
@@ -168,7 +193,78 @@ async createEmployeeProfile(
       .populate('lastAppraisalTemplateId')
       .exec();
   }
+
+  async getByEmail(email: string): Promise<EmployeeProfile | null> {
+    if (!email || typeof email !== 'string') {
+      console.error('[getByEmail] Invalid email provided');
+      return null;
+    }
+    
+    try {
+      const normalized = email.trim().toLowerCase();
+      console.log('[getByEmail] Searching for email:', normalized);
+      
+      // Use simple case-insensitive regex - most reliable approach
+      const profile = await this.employeeProfileModel
+        .findOne({ 
+          personalEmail: { 
+            $regex: new RegExp(`^${normalized.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') 
+          } 
+        })
+        .lean()
+        .exec();
+      
+      if (profile) {
+        console.log('[getByEmail] Profile found, ID:', (profile as any)._id);
+      } else {
+        console.log('[getByEmail] No profile found');
+      }
+      
+      return profile as EmployeeProfile | null;
+    } catch (error: any) {
+      console.error('[getByEmail] EXCEPTION:', error);
+      console.error('[getByEmail] Error type:', error?.constructor?.name);
+      console.error('[getByEmail] Error message:', error?.message);
+      if (error?.stack) {
+        console.error('[getByEmail] Stack:', error.stack.substring(0, 500));
+      }
+      // Return null instead of throwing
+      return null;
+    }
+  }
   
+  /**
+   * List employee profiles for directory views.
+   * - Supports optional department filter.
+   * - Avoids populate to prevent cast errors from legacy/invalid ObjectId strings.
+   */
+  async listEmployees(departmentId?: string): Promise<Partial<EmployeeProfile>[]> {
+    const filter: FilterQuery<EmployeeProfile> = {};
+
+    const normalizedDeptId = this.normalizeObjectId(departmentId);
+    if (normalizedDeptId) {
+      filter.primaryDepartmentId = normalizedDeptId as any;
+    }
+
+    const employees = await this.employeeProfileModel
+      .find(filter)
+      .select(
+        'firstName lastName employeeNumber personalEmail mobilePhone status primaryPositionId primaryDepartmentId isActive',
+      )
+      .lean()
+      .exec();
+
+    // Sanitize any legacy ObjectId("...") strings on reference fields
+    return employees.map((emp: any) => {
+      const cleaned = { ...emp };
+      const primaryPositionId = this.normalizeObjectId(emp.primaryPositionId);
+      const primaryDepartmentId = this.normalizeObjectId(emp.primaryDepartmentId);
+      if (primaryPositionId) cleaned.primaryPositionId = primaryPositionId;
+      if (primaryDepartmentId) cleaned.primaryDepartmentId = primaryDepartmentId;
+      return cleaned;
+    });
+  }
+
 
   async updateEmployeeProfile(
     id: string,
@@ -185,14 +281,79 @@ async createEmployeeProfile(
     return updated;
   }
 
+  /**
+   * Soft-deactivate an employee profile.
+   * - Sets isActive = false and status = INACTIVE
+   * - Records deactivatedAt, deactivationReason, deactivatedByEmployeeId
+   */
+  async deactivateEmployeeProfile(
+    id: string,
+    reason?: string,
+    performedByEmployeeId?: string,
+  ): Promise<EmployeeProfile> {
+    const profile = await this.employeeProfileModel.findById(id).exec();
+    if (!profile) {
+      throw new NotFoundException('Employee profile not found');
+    }
+
+    const update: any = {
+      isActive: false,
+      status: EmployeeStatus.INACTIVE,
+      statusEffectiveFrom: new Date(),
+      deactivatedAt: new Date(),
+    };
+
+    if (reason) {
+      update.deactivationReason = reason;
+    }
+
+    if (performedByEmployeeId && Types.ObjectId.isValid(performedByEmployeeId)) {
+      update.deactivatedByEmployeeId = new Types.ObjectId(performedByEmployeeId);
+    }
+
+    const updated = await this.employeeProfileModel
+      .findByIdAndUpdate(id, { $set: update }, { new: true })
+      .exec();
+
+    if (!updated) {
+      throw new NotFoundException('Employee profile not found');
+    }
+
+    return updated;
+  }
+
   // ---------------------------------------------------------------------------
   // SELF-SERVICE (Employee) – US-E2-04, US-E2-05, US-E2-12
   // ---------------------------------------------------------------------------
 
   async getSelfProfile(id: string): Promise<EmployeeProfile> {
-    const profile = await this.getById(id);
+    // Check if id is a valid MongoDB ObjectId
+    const isObjectId = Types.ObjectId.isValid(id) && id.length === 24;
+    
+    let profile: EmployeeProfile | null;
+    
+    if (isObjectId) {
+      // Try MongoDB ID first
+      profile = await this.getById(id);
+      if (!profile) {
+        // If not found by ID, it might be a User ID, so try to find by email
+        // We'll need to get the user's email first - but we don't have access to User service here
+        // So we'll skip this for now and let the error be thrown
+      }
+    } else {
+      // Try employee number first
+      profile = await this.getByEmployeeNumber(id);
+      
+      // If not found by employee number, try email
+      if (!profile && id.includes('@')) {
+        profile = await this.getByEmail(id);
+      }
+    }
+    
     if (!profile) {
-      throw new NotFoundException('Employee profile not found');
+      throw new NotFoundException(
+        'Employee profile not found. Please use your Employee Profile MongoDB _id, Employee Number (EMP), or email address.'
+      );
     }
     return profile;
   }
@@ -212,12 +373,40 @@ async createEmployeeProfile(
     }
     if (dto.address !== undefined) update.address = dto.address;
 
-    const updated = await this.employeeProfileModel
-      .findByIdAndUpdate(id, { $set: update }, { new: true })
-      .exec();
+    // Check if id is a valid MongoDB ObjectId
+    const isObjectId = Types.ObjectId.isValid(id) && id.length === 24;
+    
+    let updated: EmployeeProfile | null;
+    
+    if (isObjectId) {
+      // Update by MongoDB ID
+      updated = await this.employeeProfileModel
+        .findByIdAndUpdate(id, { $set: update }, { new: true })
+        .exec();
+    } else if (id.includes('@')) {
+      // Update by email
+      updated = await this.employeeProfileModel
+        .findOneAndUpdate(
+          { personalEmail: { $regex: new RegExp(`^${id.trim()}$`, 'i') } },
+          { $set: update },
+          { new: true }
+        )
+        .exec();
+    } else {
+      // Update by employee number
+      updated = await this.employeeProfileModel
+        .findOneAndUpdate(
+          { employeeNumber: id.trim() },
+          { $set: update },
+          { new: true }
+        )
+        .exec();
+    }
 
     if (!updated) {
-      throw new NotFoundException('Employee profile not found');
+      throw new NotFoundException(
+        'Employee profile not found. Please use your Employee Profile MongoDB _id, Employee Number (EMP), or email address.'
+      );
     }
 
     return updated;
@@ -240,6 +429,84 @@ async createEmployeeProfile(
       .find({ supervisorPositionId: manager.primaryPositionId })
       .select(
         'firstName lastName employeeNumber dateOfHire status primaryPositionId primaryDepartmentId',
+      )
+      .populate('primaryPositionId')
+      .populate('primaryDepartmentId')
+      .exec();
+  }
+
+  /**
+   * Get team members using position reporting structure.
+   * Finds all employees whose positions report (directly or indirectly) to the manager's position.
+   */
+  async getTeamByReportingStructure(
+    managerEmployeeId: string,
+  ): Promise<EmployeeProfile[]> {
+    // Get the manager's employee profile
+    const manager = await this.employeeProfileModel
+      .findById(managerEmployeeId)
+      .exec();
+
+    if (!manager || !manager.primaryPositionId) {
+      return [];
+    }
+
+    const managerPositionId = manager.primaryPositionId;
+
+    // Get all active positions
+    const allPositions = await this.positionModel
+      .find({ isActive: true })
+      .exec();
+
+    // Recursively find all positions that report to the manager's position
+    const findReportingPositions = (
+      positionId: Types.ObjectId,
+      visited: Set<string> = new Set(),
+    ): Types.ObjectId[] => {
+      const positionIdStr = positionId.toString();
+      if (visited.has(positionIdStr)) {
+        return []; // Avoid cycles
+      }
+      visited.add(positionIdStr);
+
+      const reportingPositions: Types.ObjectId[] = [];
+
+      // Find all positions that directly report to this position
+      for (const pos of allPositions) {
+        if (
+          pos.reportsToPositionId &&
+          pos.reportsToPositionId.toString() === positionIdStr
+        ) {
+          reportingPositions.push(pos._id);
+          // Recursively find positions reporting to this one
+          reportingPositions.push(
+            ...findReportingPositions(pos._id, visited),
+          );
+        }
+      }
+
+      return reportingPositions;
+    };
+
+    // Get all position IDs that report to the manager's position
+    const reportingPositionIds = findReportingPositions(managerPositionId);
+
+    if (reportingPositionIds.length === 0) {
+      return [];
+    }
+
+    // Find all employees whose primaryPositionId is in the reporting chain
+    // Include employees where isActive is true or undefined (defaults to true)
+    return this.employeeProfileModel
+      .find({
+        primaryPositionId: { $in: reportingPositionIds },
+        $or: [
+          { isActive: true },
+          { isActive: { $exists: false } }, // Handle documents created before isActive was added
+        ],
+      })
+      .select(
+        'firstName lastName employeeNumber dateOfHire status primaryPositionId primaryDepartmentId isActive',
       )
       .populate('primaryPositionId')
       .populate('primaryDepartmentId')
@@ -334,7 +601,7 @@ async createEmployeeProfile(
     return accessProfile.save();
   }
 
-  async findAll(search?: string) {
+  async findAll(search?: string, departmentId?: string) {
     const filter: FilterQuery<EmployeeProfileDocument> = {};
   
     if (search && search.trim()) {
@@ -347,9 +614,19 @@ async createEmployeeProfile(
         { status: regex },
       ];
     }
+
+    if (departmentId && departmentId.trim()) {
+      // If departmentId looks like a Mongo ObjectId, use it directly
+      const trimmed = departmentId.trim();
+      if (Types.ObjectId.isValid(trimmed) && trimmed.length === 24) {
+        filter.primaryDepartmentId = new Types.ObjectId(trimmed);
+      }
+    }
   
     return this.employeeProfileModel
       .find(filter)
+      .populate('primaryPositionId')
+      .populate('primaryDepartmentId')
       .sort({ createdAt: -1 })
       .limit(200)
       .exec();

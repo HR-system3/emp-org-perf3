@@ -1,3 +1,5 @@
+//./src/hooks/useAuth.ts
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/services/api/auth.service';

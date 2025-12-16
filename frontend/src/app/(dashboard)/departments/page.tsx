@@ -1,46 +1,44 @@
-// ./frontend/src/app/(dashboard)/departments/page.tsx
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
+import Card from '@/components/common/Card';
 import Loading from '@/components/common/Loading';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import { departmentsService } from '@/services/api/departments.service';
-import { Department, CreateDepartmentDTO } from '@/types/department.types';
-import { formatDate } from '@/lib/utils';
+import { Department } from '@/types/department.types';
 import { useAuth } from '@/hooks/useAuth';
 import { hasPermission } from '@/lib/rolePermissions';
+import { formatDate } from '@/lib/utils';
 
 export default function DepartmentsPage() {
-  const { user } = useAuth();
   const router = useRouter();
+  const { user } = useAuth();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const [isCreating, setIsCreating] = useState(false);
-  const [createForm, setCreateForm] = useState<CreateDepartmentDTO>({
-    deptId: '',
-    code: '',
-    name: '',
-    description: '',
-    headPositionId: '',
-    costCenter: '',
-  });
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    loadDepartments();
-  }, []);
+    fetchDepartments();
+  }, [user]);
 
-  const loadDepartments = async () => {
+  const fetchDepartments = async () => {
     try {
       setIsLoading(true);
-      setError(null);
+      setError('');
       const data = await departmentsService.getAllDepartments();
-      setDepartments(data);
+      
+      // Filter for Department Head/Employee - only show their department
+      const normalizedRole = (user?.role || '').toLowerCase().replace(/_/g, ' ').trim();
+      const isDepartmentHead = normalizedRole === 'department head';
+      const isDepartmentEmployee = normalizedRole === 'department employee';
+      
+      if ((isDepartmentHead || isDepartmentEmployee) && user?.departmentId) {
+        setDepartments(data.filter((dept) => dept.id === user.departmentId));
+      } else {
+        setDepartments(data);
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load departments');
     } finally {
@@ -48,220 +46,81 @@ export default function DepartmentsPage() {
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!createForm.code.trim() || !createForm.name.trim() || !createForm.costCenter.trim()) {
-      setError('Code, name, and cost center are required');
-      return;
-    }
-    try {
-      setError(null);
-      await departmentsService.createDepartment({
-        deptId: createForm.deptId?.trim() || undefined,
-        code: createForm.code.trim(),
-        name: createForm.name.trim(),
-        description: createForm.description?.trim() || undefined,
-        headPositionId: createForm.headPositionId || undefined,
-        costCenter: createForm.costCenter.trim(),
-      });
-      setIsCreating(false);
-      setCreateForm({
-        deptId: '',
-        code: '',
-        name: '',
-        description: '',
-        headPositionId: '',
-        costCenter: '',
-      });
-      loadDepartments();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create department');
-    }
-  };
-
   if (isLoading) {
     return <Loading size="lg" text="Loading departments..." />;
   }
 
+  const canCreate = hasPermission(user?.role || '', 'canCreateDepartments');
+
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="max-w-7xl mx-auto">
+      <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Departments</h1>
-          <p className="text-gray-600 mt-1">
-            Manage organizational departments as part of the Organization Structure module.
-          </p>
+          <p className="text-gray-600 mt-2">View all departments in the organization</p>
         </div>
-        {hasPermission(user?.role || '', 'canCreateDepartments') && (
-          <Button onClick={() => setIsCreating(true)}>+ New Department</Button>
+        {canCreate && (
+          <Button onClick={() => router.push('/departments/new')}>
+            + Create Department
+          </Button>
         )}
       </div>
 
-      {error && <ErrorMessage message={error} onDismiss={() => setError(null)} />}
-
-      {isCreating && (
-        <Card title="Create Department">
-          <form onSubmit={handleCreate} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Department ID (optional)
-                </label>
-                <input
-                  type="text"
-                  value={createForm.deptId}
-                  onChange={(e) => setCreateForm({ ...createForm, deptId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="If empty, system will generate (e.g. DEPT-001)"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Code *
-                </label>
-                <input
-                  type="text"
-                  value={createForm.code}
-                  onChange={(e) => setCreateForm({ ...createForm, code: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g. HR"
-                  required
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Name *
-              </label>
-              <input
-                type="text"
-                value={createForm.name}
-                onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="e.g. Finance Department"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                value={createForm.description}
-                onChange={(e) =>
-                  setCreateForm({ ...createForm, description: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                rows={3}
-                placeholder="Optional description of the department"
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Head Position ID (optional)
-                </label>
-                <input
-                  type="text"
-                  value={createForm.headPositionId}
-                  onChange={(e) =>
-                    setCreateForm({ ...createForm, headPositionId: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Position document ID for department head"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Cost Center *
-                </label>
-                <input
-                  type="text"
-                  value={createForm.costCenter}
-                  onChange={(e) =>
-                    setCreateForm({ ...createForm, costCenter: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g. CC-HR-001"
-                  required
-                />
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <Button type="submit">Create Department</Button>
-              <Button type="button" variant="outline" onClick={() => setIsCreating(false)}>
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </Card>
+      {error && (
+        <div className="mb-6">
+          <ErrorMessage message={error} onDismiss={() => setError('')} />
+        </div>
       )}
 
-      <Card title="Department List">
-        {departments.length === 0 ? (
+      {departments.length === 0 ? (
+        <Card>
           <div className="text-center py-8 text-gray-500">
-            <p>No departments found.</p>
+            <p>No departments found</p>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Created
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Updated
-                  </th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {departments.map((dept) => (
-                  <tr
-                    key={dept.id}
-                    className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => router.push(`/departments/${dept.id}`)}
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {departments.map((dept) => (
+            <Card
+              key={dept.id}
+              onClick={() => router.push(`/departments/${dept.id}`)}
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {dept.name}
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    {dept.description || 'No description provided'}
+                  </p>
+                  <div className="flex gap-4 text-sm text-gray-500">
+                    <span>Code: {dept.code}</span>
+                    {dept.positionsCount !== undefined && (
+                      <span>💼 {dept.positionsCount} positions</span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-2xl">🏢</div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <span>Created {formatDate(dept.createdAt)}</span>
+                  <span
+                    className={`px-2 py-1 rounded-full ${
+                      dept.isActive
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}
                   >
-                    <td className="px-4 py-2 text-sm font-medium text-gray-900">
-                      {dept.name}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-600">
-                      {dept.description || '—'}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-500">
-                      {formatDate(dept.createdAt)}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-500">
-                      {formatDate(dept.updatedAt)}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/departments/${dept.id}`);
-                        }}
-                      >
-                        View
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card>
+                    {dept.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,3 +1,5 @@
+//./src/app/employee-profile/self-demo/page.tsx
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -29,6 +31,36 @@ export default function SelfServiceProfileDemoPage() {
     return () => clearTimeout(id);
   }, [message]);
 
+  async function loadMyProfile() {
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await api.get<EmployeeProfile>(
+        `/employee-profile/me/self`
+      );
+      setProfile(res.data);
+      setEmployeeId(res.data._id || '');
+      setForm({
+        personalEmail: res.data.personalEmail,
+        mobilePhone: res.data.mobilePhone,
+        homePhone: res.data.homePhone,
+        biography: res.data.biography,
+        address: res.data.address as Address,
+      });
+      setMessage('Profile loaded successfully!');
+    } catch (err: any) {
+      console.error('Error loading my profile:', err);
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.error || 
+                          err.message || 
+                          'Failed to load your profile. Please ensure your employee profile exists and matches your login email.';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function loadProfile() {
     if (!employeeId) return;
     setLoading(true);
@@ -46,9 +78,14 @@ export default function SelfServiceProfileDemoPage() {
         biography: res.data.biography,
         address: res.data.address as Address,
       });
+      setMessage('Profile loaded successfully!');
     } catch (err: any) {
-      console.error(err);
-      setError(err.response?.data?.message || 'Failed to load profile');
+      console.error('Error loading profile:', err);
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.error || 
+                          err.message || 
+                          'Failed to load profile. Please check that you entered a valid Employee Profile MongoDB _id, Employee Number (EMP), or email address.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -74,21 +111,23 @@ export default function SelfServiceProfileDemoPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    if (!employeeId) return;
+    if (!profile) return;
     setSaving(true);
     setError(null);
     setMessage(null);
 
     try {
+      // Use the profile's _id if available, otherwise use employeeId
+      const profileId = profile._id || employeeId;
       const res = await api.patch<EmployeeProfile>(
-        `/employee-profile/${employeeId}/self`,
+        `/employee-profile/${profileId}/self`,
         form
       );
       setProfile(res.data);
       setMessage('Profile updated successfully.');
     } catch (err: any) {
       console.error(err);
-      setError(err.response?.data?.message || 'Failed to update profile');
+      setError(err.response?.data?.message || err.message || 'Failed to update profile');
     } finally {
       setSaving(false);
     }
@@ -101,7 +140,7 @@ export default function SelfServiceProfileDemoPage() {
           <h1 className="text-2xl font-bold text-gray-900">Self-Service Profile</h1>
           <p className="text-gray-600 mt-1">
             Employee self-service screen for viewing and editing their own profile.
-            Paste an existing employee profile Mongo _id to load the profile.
+            Enter your MongoDB _id or Employee Number (EMP) to load your profile.
           </p>
         </div>
         <Button onClick={() => router.back()} variant="outline">
@@ -118,17 +157,27 @@ export default function SelfServiceProfileDemoPage() {
       )}
 
       <Card>
-        <div className="flex gap-3 mb-4">
-          <input
-            type="text"
-            placeholder="EmployeeProfile Mongo _id"
-            value={employeeId}
-            onChange={(e) => setEmployeeId(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-          <Button onClick={loadProfile} disabled={loading}>
-            {loading ? 'Loading...' : 'Load Profile'}
-          </Button>
+        <div className="mb-4">
+          <div className="flex gap-3 mb-3">
+            <Button onClick={loadMyProfile} disabled={loading} variant="primary">
+              {loading ? 'Loading...' : 'Load My Profile (Auto)'}
+            </Button>
+          </div>
+          <div className="text-sm text-gray-600 mb-3">
+            Or manually enter your Employee Profile MongoDB _id, Employee Number (EMP), or email:
+          </div>
+          <div className="flex gap-3">
+            <input
+              type="text"
+              placeholder="MongoDB _id, Employee Number (EMP), or Email"
+              value={employeeId}
+              onChange={(e) => setEmployeeId(e.target.value)}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <Button onClick={loadProfile} disabled={loading || !employeeId}>
+              {loading ? 'Loading...' : 'Load Profile'}
+            </Button>
+          </div>
         </div>
       </Card>
 

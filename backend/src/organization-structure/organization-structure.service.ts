@@ -60,6 +60,16 @@ export class OrganizationStructureService {
     private employeeProfileStub: EmployeeProfileStub,
   ) {}
 
+  /**
+   * Normalize/validate an incoming id string for Mongo ObjectId usage.
+   * Returns a valid hex string or null if invalid (including strings like "new").
+   */
+  private normalizeObjectId(id?: string): string | null {
+    if (!id) return null;
+    const trimmed = id.trim();
+    return Types.ObjectId.isValid(trimmed) ? trimmed : null;
+  }
+
   // ==================== Audit Logging (BR-22) ====================
   // ==================== Audit Logging (BR-22) ====================
 private async createAuditLog(
@@ -198,7 +208,11 @@ private async createAuditLog(
       isActive: true,
     });
     if (dto.headPositionId) {
-      department.headPositionId = new Types.ObjectId(dto.headPositionId);
+      const headId = this.normalizeObjectId(dto.headPositionId);
+      if (!headId) {
+        throw new BadRequestException('Invalid headPositionId');
+      }
+      department.headPositionId = new Types.ObjectId(headId);
     }
   
     const saved = await department.save();
@@ -224,7 +238,12 @@ private async createAuditLog(
   }
 
   async getDepartmentById(id: string): Promise<DepartmentDocument> {
-    const department = await this.departmentModel.findById(id).exec();
+    const validId = this.normalizeObjectId(id);
+    if (!validId) {
+      throw new NotFoundException(`Department with ID ${id} not found`);
+    }
+
+    const department = await this.departmentModel.findById(validId).exec();
     if (!department) {
       throw new NotFoundException(`Department with ID ${id} not found`);
     }
@@ -310,10 +329,22 @@ private async createAuditLog(
       throw new BadRequestException('Cost center is required (BR-30)');
     }
 
-    // REQ-OSM-09: Check for circular reporting
+    // REQ-OSM-09: Validate reporting line
     if (dto.reportsToPositionId) {
+      // Ensure the reporting position actually exists
+      const reportsToExists = await this.positionModel
+        .findById(dto.reportsToPositionId)
+        .lean()
+        .exec();
+      if (!reportsToExists) {
+        throw new BadRequestException(
+          'Reporting position does not exist (REQ-OSM-09)',
+        );
+      }
+
+      // Check for circular reporting
       const isCircular = await this.checkCircularReporting(
-        dto.positionId, // Use positionId for checking (will be created)
+        dto.positionId, // Use business positionId for checking (will be created)
         dto.reportsToPositionId,
       );
       if (isCircular) {
@@ -323,17 +354,34 @@ private async createAuditLog(
       }
     }
 
+    const deptId = this.normalizeObjectId(dto.departmentId);
+    if (!deptId) {
+      throw new BadRequestException('Invalid departmentId');
+    }
+
+    const payGradeId = dto.payGradeId
+      ? this.normalizeObjectId(dto.payGradeId)
+      : null;
+    if (dto.payGradeId && !payGradeId) {
+      throw new BadRequestException('Invalid payGradeId');
+    }
+
+    const reportsToId = dto.reportsToPositionId
+      ? this.normalizeObjectId(dto.reportsToPositionId)
+      : null;
+    if (dto.reportsToPositionId && !reportsToId) {
+      throw new BadRequestException('Invalid reportsToPositionId');
+    }
+
     const position = new this.positionModel({
       positionId: dto.positionId,
       code: dto.code,
       title: dto.title,
       description: dto.description,
       jobKey: dto.jobKey,
-      departmentId: new Types.ObjectId(dto.departmentId),
-      payGradeId: new Types.ObjectId(dto.payGradeId),
-      reportsToPositionId: dto.reportsToPositionId
-        ? new Types.ObjectId(dto.reportsToPositionId)
-        : undefined,
+      departmentId: new Types.ObjectId(deptId),
+      payGradeId: payGradeId ? new Types.ObjectId(payGradeId) : undefined,
+      reportsToPositionId: reportsToId ? new Types.ObjectId(reportsToId) : undefined,
       status: dto.status || PositionStatus.VACANT,
       costCenter: dto.costCenter,
       isActive: true,
@@ -360,7 +408,12 @@ private async createAuditLog(
   }
 
   async getPositionById(id: string): Promise<PositionDocument> {
-    const position = await this.positionModel.findById(id).exec();
+    const validId = this.normalizeObjectId(id);
+    if (!validId) {
+      throw new NotFoundException(`Position with ID ${id} not found`);
+    }
+
+    const position = await this.positionModel.findById(validId).exec();
     if (!position) {
       throw new NotFoundException(`Position with ID ${id} not found`);
     }
@@ -379,10 +432,22 @@ private async createAuditLog(
     const position = await this.getPositionById(id);
     const beforeSnapshot = position.toObject();
 
-    // REQ-OSM-09: Check for circular reporting if reportsToPositionId is being updated
+    // REQ-OSM-09: Validate reporting line if reportsToPositionId is being updated
     if (dto.reportsToPositionId !== undefined) {
       const newReportsTo = dto.reportsToPositionId;
       if (newReportsTo) {
+        // Ensure the reporting position actually exists
+        const reportsToExists = await this.positionModel
+          .findById(newReportsTo)
+          .lean()
+          .exec();
+        if (!reportsToExists) {
+          throw new BadRequestException(
+            'Reporting position does not exist (REQ-OSM-09)',
+          );
+        }
+
+        // Check for circular reporting
         const isCircular = await this.checkCircularReporting(
           id,
           newReportsTo,
@@ -611,6 +676,17 @@ await this.createAuditLog(
 
       // Apply changes from request
       if (request.reportingTo) {
+        // REQ-OSM-09: Validate reporting position exists
+        const reportsToExists = await this.positionModel
+          .findById(request.reportingTo)
+          .lean()
+          .exec();
+        if (!reportsToExists) {
+          throw new BadRequestException(
+            'Reporting position does not exist (REQ-OSM-09)',
+          );
+        }
+
         // REQ-OSM-09: Check for circular reporting
         const isCircular = await this.checkCircularReporting(
           request.targetPositionId.toString(),

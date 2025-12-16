@@ -1,4 +1,4 @@
-import axiosInstance from './axios.config';
+import { api } from '@/lib/axios';
 import {
   Position,
   CreatePositionDTO,
@@ -32,21 +32,21 @@ function mapPosition(api: PositionApi): Position {
 
 export const positionsService = {
   async getAllPositions(): Promise<Position[]> {
-    const response = await axiosInstance.get<PositionApi[]>(
+    const response = await api.get<PositionApi[]>(
       '/organization-structure/positions',
     );
     return response.data.map(mapPosition);
   },
 
   async getPositionById(id: string): Promise<Position> {
-    const response = await axiosInstance.get<PositionApi>(
+    const response = await api.get<PositionApi>(
       `/organization-structure/positions/${id}`,
     );
     return mapPosition(response.data);
   },
 
   async createPosition(dto: CreatePositionDTO): Promise<Position> {
-    const response = await axiosInstance.post<PositionApi>(
+    const response = await api.post<PositionApi>(
       '/organization-structure/positions',
       dto,
     );
@@ -57,7 +57,7 @@ export const positionsService = {
     id: string,
     dto: UpdatePositionDTO,
   ): Promise<Position> {
-    const response = await axiosInstance.put<PositionApi>(
+    const response = await api.put<PositionApi>(
       `/organization-structure/positions/${id}`,
       dto,
     );
@@ -65,7 +65,7 @@ export const positionsService = {
   },
 
   async deactivatePosition(id: string): Promise<Position> {
-    const response = await axiosInstance.patch<PositionApi>(
+    const response = await api.patch<PositionApi>(
       `/organization-structure/positions/${id}/deactivate`,
     );
     return mapPosition(response.data);
@@ -75,7 +75,7 @@ export const positionsService = {
     id: string,
     dto: DelimitPositionDTO,
   ): Promise<Position> {
-    const response = await axiosInstance.patch<PositionApi>(
+    const response = await api.patch<PositionApi>(
       `/organization-structure/positions/${id}/delimit`,
       dto,
     );

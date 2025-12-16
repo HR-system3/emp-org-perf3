@@ -51,10 +51,10 @@ export default function CreateEmployeePage() {
     dateOfBirth: "",
     dateOfHire: "",
     contractType: "FULL_TIME_CONTRACT",
-    positionTitle: "",
-    departmentName: "",
-    departmentCode: "",
-    payGradeId: "",
+    positionTitle: undefined,
+    departmentName: undefined,
+    departmentCode: undefined,
+    payGradeId: undefined,
     gender: "MALE",
     maritalStatus: "SINGLE",
     status: "ACTIVE",
@@ -78,10 +78,20 @@ export default function CreateEmployeePage() {
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) {
     const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value === "" ? undefined : value,
-    }));
+    // For optional fields (positionTitle, departmentName, departmentCode, payGradeId), 
+    // set to undefined if empty, otherwise use the value
+    const optionalFields = ['positionTitle', 'departmentName', 'departmentCode', 'payGradeId'];
+    if (optionalFields.includes(name)) {
+      setForm((prev) => ({
+        ...prev,
+        [name]: value.trim() === "" ? undefined : value,
+      }));
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -91,32 +101,85 @@ export default function CreateEmployeePage() {
     setResult(null);
 
     try {
-      const payload = {
-        ...form,
+      // Build payload, removing empty strings and converting to proper format
+      const payload: CreateEmployeeProfileDto = {
         employeeNumber: form.employeeNumber.trim(),
-        payGradeId: form.payGradeId ? form.payGradeId.trim() : undefined,
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        nationalId: form.nationalId.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
         dateOfBirth: new Date(form.dateOfBirth).toISOString(),
         dateOfHire: new Date(form.dateOfHire).toISOString(),
+        contractType: form.contractType,
+        status: form.status,
+        gender: form.gender,
+        maritalStatus: form.maritalStatus,
       };
+
+      // Add optional fields only if they have values
+      if (form.positionTitle?.trim()) {
+        payload.positionTitle = form.positionTitle.trim();
+      }
+      if (form.departmentName?.trim()) {
+        payload.departmentName = form.departmentName.trim();
+      }
+      if (form.departmentCode?.trim()) {
+        payload.departmentCode = form.departmentCode.trim();
+      }
+      if (form.payGradeId?.trim() && form.payGradeId.trim() !== 'optional') {
+        payload.payGradeId = form.payGradeId.trim();
+      }
 
       const res = await api.post<EmployeeProfile>(
         "/employee-profile",
         payload
       );
       setResult(res.data);
-      setToast("Employee created successfully.");
+      setToast("Employee created successfully. Redirecting...");
+      
+      // Redirect to employee details page after 1.5 seconds
+      setTimeout(() => {
+        const employeeId = res.data._id || (res.data as any).id;
+        if (employeeId) {
+          router.push(`/employee-profile/${employeeId}`);
+        } else {
+          router.push('/employee-profile');
+        }
+      }, 1500);
     } catch (err: any) {
-      console.error(err);
-      const backendMessage =
-        err?.response?.data?.message ||
-        err?.response?.data ||
-        err?.message ||
-        "Failed to create employee";
-      setError(
-        typeof backendMessage === "string"
-          ? backendMessage
-          : JSON.stringify(backendMessage)
-      );
+      console.error('Error creating employee:', err);
+      
+      // Handle validation errors from class-validator
+      if (err?.response?.status === 400 && err?.response?.data?.message) {
+        const validationErrors = err.response.data.message;
+        if (Array.isArray(validationErrors)) {
+          // Format validation errors nicely
+          const errorMessages = validationErrors.map((error: any) => {
+            if (typeof error === 'string') return error;
+            return Object.values(error.constraints || {}).join(', ');
+          }).join('\n');
+          setError(errorMessages);
+        } else {
+          setError(validationErrors);
+        }
+      } else {
+        // Handle other errors (403, 500, etc.)
+        const backendMessage =
+          err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          (err?.response?.status === 403 
+            ? 'You do not have permission to create employees. Please contact your administrator.'
+            : err?.response?.status === 500
+            ? 'Server error occurred. Please try again later.'
+            : err?.message ||
+            "Failed to create employee");
+        setError(
+          typeof backendMessage === "string"
+            ? backendMessage
+            : JSON.stringify(backendMessage)
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -354,13 +417,13 @@ export default function CreateEmployeePage() {
             {/* Position / department */}
             <div>
               <label htmlFor="positionTitle" className="block text-sm font-medium text-gray-700 mb-1">
-                Position Title
+                Position Title (optional)
               </label>
               <input
                 id="positionTitle"
                 name="positionTitle"
                 placeholder="Software Developer"
-                value={form.positionTitle}
+                value={form.positionTitle || ""}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
@@ -368,13 +431,13 @@ export default function CreateEmployeePage() {
 
             <div>
               <label htmlFor="departmentName" className="block text-sm font-medium text-gray-700 mb-1">
-                Department Name
+                Department Name (optional)
               </label>
               <input
                 id="departmentName"
                 name="departmentName"
                 placeholder="IT"
-                value={form.departmentName}
+                value={form.departmentName || ""}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
@@ -425,18 +488,6 @@ export default function CreateEmployeePage() {
         </form>
       </Card>
 
-      {result && (
-        <Card title="Created Employee">
-          <div className="space-y-4">
-            <p className="text-sm text-gray-600">
-              Employee created successfully. You can copy the Mongo <code className="bg-gray-100 px-1 rounded">_id</code> and employee number from the JSON below.
-            </p>
-            <pre className="bg-gray-900 text-gray-100 rounded-lg p-4 overflow-auto max-h-96 text-sm">
-              {JSON.stringify(result, null, 2)}
-            </pre>
-          </div>
-        </Card>
-      )}
     </div>
   );
 }

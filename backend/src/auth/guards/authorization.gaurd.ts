@@ -40,20 +40,39 @@ function normalizeRole(role: string): string {
 function roleMatches(userRole: string, requiredRoles: Role[]): boolean {
   if (!userRole) return false;
   
-  // First, try direct comparison (case-insensitive)
+  // Normalize user role once
   const userRoleLower = userRole.toLowerCase().trim();
+  const normalizedUserRole = normalizeRole(userRole);
+  
+  // Check each required role
   for (const requiredRole of requiredRoles) {
     const requiredRoleStr = requiredRole.toString();
-    if (userRoleLower === requiredRoleStr.toLowerCase()) {
+    const requiredRoleLower = requiredRoleStr.toLowerCase().trim();
+    const normalizedRequiredRole = normalizeRole(requiredRoleStr);
+    
+    // Try direct comparison (case-insensitive)
+    if (userRoleLower === requiredRoleLower) {
       return true;
+    }
+    
+    // Try normalized comparison
+    if (normalizedUserRole === normalizedRequiredRole) {
+      return true;
+    }
+    
+    // Also check if enum key matches (e.g., "HR_ADMIN" matches Role.HR_ADMIN)
+    const enumKey = Object.keys(Role).find(
+      key => Role[key as keyof typeof Role] === requiredRoleStr
+    );
+    if (enumKey) {
+      const enumKeyNormalized = normalizeRole(enumKey);
+      if (normalizedUserRole === enumKeyNormalized) {
+        return true;
+      }
     }
   }
   
-  // Then try normalized comparison
-  const normalizedUserRole = normalizeRole(userRole);
-  const normalizedRequiredRoles = requiredRoles.map(r => normalizeRole(r.toString()));
-  
-  return normalizedRequiredRoles.includes(normalizedUserRole);
+  return false;
 }
 
 @Injectable()
@@ -78,18 +97,34 @@ export class authorizationGaurd implements CanActivate {
       throw new ForbiddenException('User role not found');
     }
     
-    // Debug logging (remove in production if needed)
+    // Enhanced debug logging
+    const normalizedUserRole = normalizeRole(userRole);
+    const normalizedRequiredRoles = requiredRoles.map(r => normalizeRole(r.toString()));
+    const directMatch = requiredRoles.some(r => {
+      const requiredStr = r.toString().toLowerCase().trim();
+      return userRole.toLowerCase().trim() === requiredStr;
+    });
+    const normalizedMatch = normalizedRequiredRoles.includes(normalizedUserRole);
+    
     console.log('[Authorization Guard] Debug:', {
       userRole: userRole,
-      userRoleType: typeof userRole,
+      normalizedUserRole: normalizedUserRole,
       requiredRoles: requiredRoles.map(r => r.toString()),
+      normalizedRequiredRoles: normalizedRequiredRoles,
+      directMatch: directMatch,
+      normalizedMatch: normalizedMatch,
+      willAllow: directMatch || normalizedMatch,
       userObject: JSON.stringify(user),
     });
     
     // Check if user's role matches any of the required roles
     // Use improved role matching function
     if (!roleMatches(userRole, requiredRoles)) {
-      throw new ForbiddenException(`Unauthorized access. Required roles: ${requiredRoles.map(r => r.toString()).join(', ')}, User role: ${userRole}`);
+      throw new ForbiddenException(
+        `Unauthorized access. Required roles: ${requiredRoles.map(r => r.toString()).join(', ')}, ` +
+        `User role: "${userRole}" (normalized: "${normalizedUserRole}"). ` +
+        `Please ensure your user account has one of the required roles assigned.`
+      );
     }
        
     return true;
