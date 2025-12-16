@@ -1,18 +1,21 @@
-// ./src/app/employee-profile/self-demo/page.tsx
+'use client';
 
-"use client";
-
-import { useState, useEffect } from "react";
-import {api} from "@/lib/axios";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { api } from '@/lib/axios';
 import {
   EmployeeProfile,
   SelfServiceUpdateProfileDto,
   Address,
-} from "@/types/employeeProfile";
-import BackButton from "@/components/BackButton";
+} from '@/types/employeeProfile';
+import Card from '@/components/common/Card';
+import Button from '@/components/common/Button';
+import ErrorMessage from '@/components/common/ErrorMessage';
+import Loading from '@/components/common/Loading';
 
 export default function SelfServiceProfileDemoPage() {
-  const [employeeId, setEmployeeId] = useState("");
+  const router = useRouter();
+  const [employeeId, setEmployeeId] = useState('');
   const [profile, setProfile] = useState<EmployeeProfile | null>(null);
   const [form, setForm] = useState<SelfServiceUpdateProfileDto>({});
   const [loading, setLoading] = useState(false);
@@ -45,7 +48,7 @@ export default function SelfServiceProfileDemoPage() {
       });
     } catch (err: any) {
       console.error(err);
-      setError(err.response?.data?.message || "Failed to load profile");
+      setError(err.response?.data?.message || 'Failed to load profile');
     } finally {
       setLoading(false);
     }
@@ -55,8 +58,8 @@ export default function SelfServiceProfileDemoPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
     const { name, value } = e.target;
-    if (name.startsWith("address.")) {
-      const field = name.split(".")[1] as keyof Address;
+    if (name.startsWith('address.')) {
+      const field = name.split('.')[1] as keyof Address;
       setForm((prev) => ({
         ...prev,
         address: {
@@ -82,122 +85,168 @@ export default function SelfServiceProfileDemoPage() {
         form
       );
       setProfile(res.data);
-      setMessage("Profile updated successfully.");
+      setMessage('Profile updated successfully.');
     } catch (err: any) {
       console.error(err);
-      setError(err.response?.data?.message || "Failed to update profile");
+      setError(err.response?.data?.message || 'Failed to update profile');
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <main style={{ padding: "2rem", maxWidth: 800, margin: "0 auto" }}>
-            <BackButton />
-      <h1>Self-Service Profile (Demo)</h1>
-      <p>Paste an existing employee profile Mongo _id for now.</p>
-
-      <div style={{ display: "flex", gap: "0.8rem", marginTop: "1rem" }}>
-        <input
-          placeholder="EmployeeProfile Mongo _id"
-          value={employeeId}
-          onChange={(e) => setEmployeeId(e.target.value)}
-        />
-        <button onClick={loadProfile} disabled={loading}>
-          {loading ? "Loading..." : "Load Profile"}
-        </button>
+    <div className="max-w-7xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Self-Service Profile</h1>
+          <p className="text-gray-600 mt-1">
+            Employee self-service screen for viewing and editing their own profile.
+            Paste an existing employee profile Mongo _id to load the profile.
+          </p>
+        </div>
+        <Button onClick={() => router.back()} variant="outline">
+          Back
+        </Button>
       </div>
 
-      {error && (
-        <p style={{ color: "red", marginTop: "1rem" }}>
-          Error: {Array.isArray(error) ? error.join(", ") : error}
-        </p>
-      )}
+      {error && <ErrorMessage message={error} onDismiss={() => setError(null)} />}
+
       {message && (
-        <div className="toast">
-          <span>✅</span>
-          <span>{message}</span>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <p className="text-sm text-green-800">{message}</p>
         </div>
-        )}
+      )}
+
+      <Card>
+        <div className="flex gap-3 mb-4">
+          <input
+            type="text"
+            placeholder="EmployeeProfile Mongo _id"
+            value={employeeId}
+            onChange={(e) => setEmployeeId(e.target.value)}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+          <Button onClick={loadProfile} disabled={loading}>
+            {loading ? 'Loading...' : 'Load Profile'}
+          </Button>
+        </div>
+      </Card>
+
+      {loading && <Loading text="Loading profile..." />}
 
       {profile && (
-        <form
-          onSubmit={handleSave}
-          style={{ display: "grid", gap: "0.8rem", marginTop: "1.5rem" }}
-        >
-          <h2>Editable Fields</h2>
-
-          <div>
-            <label>Personal Email</label>
-            <input
-              name="personalEmail"
-              value={form.personalEmail || ""}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div style={{ display: "flex", gap: "0.8rem" }}>
-            <div style={{ flex: 1 }}>
-              <label>Mobile Phone</label>
+        <Card title="Editable Fields">
+          <form onSubmit={handleSave} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Personal Email
+              </label>
               <input
-                name="mobilePhone"
-                value={form.mobilePhone || ""}
+                type="email"
+                name="personalEmail"
+                value={form.personalEmail || ''}
                 onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div style={{ flex: 1 }}>
-              <label>Home Phone</label>
-              <input
-                name="homePhone"
-                value={form.homePhone || ""}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mobile Phone
+                </label>
+                <input
+                  type="tel"
+                  name="mobilePhone"
+                  value={form.mobilePhone || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Home Phone
+                </label>
+                <input
+                  type="tel"
+                  name="homePhone"
+                  value={form.homePhone || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Biography
+              </label>
+              <textarea
+                name="biography"
+                rows={3}
+                value={form.biography || ''}
                 onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-          </div>
 
-          <div>
-            <label>Biography</label>
-            <textarea
-              name="biography"
-              rows={3}
-              value={form.biography || ""}
-              onChange={handleChange}
-            />
-          </div>
-
-          <h3>Address</h3>
-          <div style={{ display: "flex", gap: "0.8rem" }}>
-            <div style={{ flex: 1 }}>
-              <label>City</label>
-              <input
-                name="address.city"
-                value={form.address?.city || ""}
-                onChange={handleChange}
-              />
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Address</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    name="address.city"
+                    value={form.address?.city || ''}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Country
+                  </label>
+                  <input
+                    type="text"
+                    name="address.country"
+                    value={form.address?.country || ''}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Street Address
+                </label>
+                <input
+                  type="text"
+                  name="address.streetAddress"
+                  value={form.address?.streetAddress || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
-            <div style={{ flex: 1 }}>
-              <label>Country</label>
-              <input
-                name="address.country"
-                value={form.address?.country || ""}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-          <div>
-            <label>Street Address</label>
-            <input
-              name="address.streetAddress"
-              value={form.address?.streetAddress || ""}
-              onChange={handleChange}
-            />
-          </div>
 
-          <button type="submit" disabled={saving}>
-            {saving ? "Saving..." : "Save Changes"}
-          </button>
-        </form>
+            <div className="flex gap-3">
+              <Button type="submit" disabled={saving}>
+                {saving ? 'Saving...' : 'Save Changes'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.back()}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </Card>
       )}
-    </main>
+    </div>
   );
 }

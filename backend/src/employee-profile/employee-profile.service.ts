@@ -51,26 +51,89 @@ export class EmployeeProfileService {
 async createEmployeeProfile(
   dto: CreateEmployeeProfileDto,
 ): Promise<EmployeeProfile> {
+  // Validate required fields
+  if (!dto.employeeNumber || !dto.employeeNumber.trim()) {
+    throw new Error('Employee number is required');
+  }
+  if (!dto.firstName || !dto.firstName.trim()) {
+    throw new Error('First name is required');
+  }
+  if (!dto.lastName || !dto.lastName.trim()) {
+    throw new Error('Last name is required');
+  }
+  if (!dto.nationalId || !dto.nationalId.trim()) {
+    throw new Error('National ID is required');
+  }
+  if (!dto.email || !dto.email.trim()) {
+    throw new Error('Email is required');
+  }
+  if (!dto.phone || !dto.phone.trim()) {
+    throw new Error('Phone is required');
+  }
+  if (!dto.dateOfBirth) {
+    throw new Error('Date of birth is required');
+  }
+  if (!dto.dateOfHire) {
+    throw new Error('Date of hire is required');
+  }
+  if (!dto.contractType) {
+    throw new Error('Contract type is required');
+  }
+
+  // Convert date strings to Date objects if needed
+  const dateOfBirth = dto.dateOfBirth instanceof Date 
+    ? dto.dateOfBirth 
+    : new Date(dto.dateOfBirth);
+  
+  const dateOfHire = dto.dateOfHire instanceof Date 
+    ? dto.dateOfHire 
+    : new Date(dto.dateOfHire);
+
+  // Validate dates
+  if (isNaN(dateOfBirth.getTime())) {
+    throw new Error('Invalid date of birth');
+  }
+  if (isNaN(dateOfHire.getTime())) {
+    throw new Error('Invalid date of hire');
+  }
+
   const docData: any = {
     // Normalize employee number to avoid leading/trailing spaces
     employeeNumber: dto.employeeNumber.trim(),
-    dateOfHire: dto.dateOfHire,
+    dateOfHire: dateOfHire,
 
     // Base user fields – these live on UserProfileBase
-    firstName: dto.firstName,
-    lastName: dto.lastName,
-    nationalId: dto.nationalId,
-    personalEmail: dto.email,
-    mobilePhone: dto.phone,
-    dateOfBirth: dto.dateOfBirth,
+    firstName: dto.firstName.trim(),
+    lastName: dto.lastName.trim(),
+    nationalId: dto.nationalId.trim(),
+    personalEmail: dto.email.trim(),
+    mobilePhone: dto.phone.trim(),
+    dateOfBirth: dateOfBirth,
 
     contractType: dto.contractType,
     status: dto.status ?? EmployeeStatus.ACTIVE,
   };
 
-  // Only set payGradeId if a non-empty string was provided
-  if (dto.payGradeId && dto.payGradeId.trim() !== '') {
-    docData.payGradeId = dto.payGradeId.trim();
+  // Add optional fields if provided
+  if (dto.gender) {
+    docData.gender = dto.gender;
+  }
+  if (dto.maritalStatus) {
+    docData.maritalStatus = dto.maritalStatus;
+  }
+
+  // Only set payGradeId if a non-empty string was provided and it's a valid ObjectId
+  if (dto.payGradeId && dto.payGradeId.trim() !== '' && dto.payGradeId.trim() !== 'optional') {
+    try {
+      // Validate it's a valid MongoDB ObjectId format
+      const mongoose = require('mongoose');
+      if (mongoose.Types.ObjectId.isValid(dto.payGradeId.trim())) {
+        docData.payGradeId = dto.payGradeId.trim();
+      }
+    } catch (error) {
+      // If payGradeId is invalid, just skip it
+      console.warn('Invalid payGradeId provided, skipping:', dto.payGradeId);
+    }
   }
 
   const doc = new this.employeeProfileModel(docData);

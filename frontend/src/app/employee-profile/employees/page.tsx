@@ -1,26 +1,29 @@
-// src/app/employee-profile/employees/page.tsx
+'use client';
 
-"use client";
-
-import { useState, useEffect } from "react";
-import {api} from "@/lib/axios";
-import { EmployeeProfile } from "@/types/employeeProfile";
-import BackButton from "@/components/BackButton";
-import Link from "next/link";
-import StatusBadge from "@/components/StatusBadge";
-import Avatar from "@/components/Avatar";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { api } from '@/lib/axios';
+import { EmployeeProfile } from '@/types/employeeProfile';
+import Card from '@/components/common/Card';
+import Button from '@/components/common/Button';
+import Loading from '@/components/common/Loading';
+import ErrorMessage from '@/components/common/ErrorMessage';
+import StatusBadge from '@/components/StatusBadge';
+import Avatar from '@/components/Avatar';
 
 export default function EmployeesDirectoryPage() {
+  const router = useRouter();
   const [employees, setEmployees] = useState<EmployeeProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
 
   async function loadEmployees() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get<EmployeeProfile[]>("/employee-profile", {
+      const res = await api.get<EmployeeProfile[]>('/employee-profile', {
         params: { search: search || undefined },
       });
       setEmployees(res.data);
@@ -30,9 +33,9 @@ export default function EmployeesDirectoryPage() {
         err?.response?.data?.message ||
         err?.response?.data ||
         err?.message ||
-        "Failed to load employees.";
+        'Failed to load employees.';
       setError(
-        typeof backendMessage === "string"
+        typeof backendMessage === 'string'
           ? backendMessage
           : JSON.stringify(backendMessage)
       );
@@ -42,7 +45,6 @@ export default function EmployeesDirectoryPage() {
   }
 
   useEffect(() => {
-    // load employees automatically when the page opens
     loadEmployees();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -54,118 +56,121 @@ export default function EmployeesDirectoryPage() {
       e.employeeNumber.toLowerCase().includes(q) ||
       e.firstName.toLowerCase().includes(q) ||
       e.lastName.toLowerCase().includes(q) ||
-      (e.status || "").toLowerCase().includes(q)
+      (e.status || '').toLowerCase().includes(q)
     );
   });
 
+  if (loading && !employees.length) {
+    return <Loading text="Loading employees..." />;
+  }
+
   return (
-    <main className="page">
-      <section className="card">
-        <BackButton />
+    <div className="max-w-7xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Employees Directory</h1>
+          <p className="text-gray-600 mt-1">
+            Browse all employee profiles stored in the system. Use the search box to filter by name, employee number, or status.
+          </p>
+        </div>
+        <Button onClick={() => router.push('/employee-profile/new')}>
+          + New Employee
+        </Button>
+      </div>
 
-        <h1>Employees Directory (HR)</h1>
-        <p className="text-muted">
-          Browse all employee profiles stored in the system. Use the search box
-          to filter by name, employee number, or status, then click any row to
-          open the full profile.
-        </p>
+      {error && <ErrorMessage message={error} onDismiss={() => setError(null)} />}
 
-        <div
-          style={{
-            marginTop: "1rem",
-            display: "flex",
-            gap: "0.75rem",
-            alignItems: "center",
-          }}
-        >
+      <Card>
+        <div className="flex gap-3 mb-4">
           <input
+            type="text"
             placeholder="Search by name, employee number, or status…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ flex: 1 }}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
-          <button type="button" onClick={loadEmployees} disabled={loading}>
-            {loading ? "Refreshing…" : "Refresh"}
-          </button>
+          <Button onClick={loadEmployees} disabled={loading} variant="outline">
+            {loading ? 'Refreshing…' : 'Refresh'}
+          </Button>
         </div>
 
-        {error && <p className="error">Error: {error}</p>}
-
-        <div className="table-wrapper" style={{ marginTop: "1rem" }}>
-          {loading && !employees.length ? (
-            <div style={{ padding: "1rem" }}>Loading employees…</div>
-          ) : filtered.length === 0 ? (
-            <div style={{ padding: "1rem" }}>No employees found.</div>
-          ) : (
-            <table>
-              <thead>
+        {filtered.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <p>No employees found.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th>Employee</th>
-                  <th>Status</th>
-                  <th>Date of Hire</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Employee
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date of Hire
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="bg-white divide-y divide-gray-200">
                 {filtered.map((emp) => (
-                  <tr key={emp._id}>
-                    {/* Employee cell with avatar + name + number */}
-                    <td>
+                  <tr
+                    key={emp._id}
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => router.push(`/employee-profile/${emp._id}`)}
+                  >
+                    <td className="px-4 py-3">
                       <Link
                         href={`/employee-profile/${emp._id}`}
-                        style={{
-                          color: "inherit",
-                          textDecoration: "none",
-                        }}
+                        className="flex items-center gap-3"
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                          }}
-                        >
-                          <Avatar
-                            name={`${emp.firstName} ${emp.lastName}`}
-                            size={28}
-                          />
-                          <div>
-                            <div
-                              style={{
-                                fontSize: 13,
-                                fontWeight: 500,
-                              }}
-                            >
-                              {emp.firstName} {emp.lastName}
-                            </div>
-                            <div
-                              className="text-muted"
-                              style={{ fontSize: 11 }}
-                            >
-                              {emp.employeeNumber}
-                            </div>
+                        <Avatar
+                          name={`${emp.firstName} ${emp.lastName}`}
+                          size={40}
+                        />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {emp.firstName} {emp.lastName}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {emp.employeeNumber}
                           </div>
                         </div>
                       </Link>
                     </td>
-
-                    {/* Status with StatusBadge */}
-                    <td>
+                    <td className="px-4 py-3">
                       <StatusBadge kind="employee" value={emp.status} />
                     </td>
-
-                    {/* Date of hire */}
-                    <td>
+                    <td className="px-4 py-3 text-sm text-gray-500">
                       {emp.dateOfHire
                         ? new Date(emp.dateOfHire).toLocaleDateString()
-                        : "—"}
+                        : '—'}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/employee-profile/${emp._id}`);
+                        }}
+                      >
+                        View
+                      </Button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
-      </section>
-    </main>
+          </div>
+        )}
+      </Card>
+    </div>
   );
 }

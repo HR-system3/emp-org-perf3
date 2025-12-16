@@ -9,5 +9,39 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// Request interceptor to add JWT token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for error handling
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid
+      localStorage.removeItem('auth_token');
+      // Only redirect if we're not already on the login page
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+    }
+    // Note: 403 errors are handled in individual components to show user-friendly messages
+    
+    return Promise.reject(error);
+  }
+);
+
 export { api };
 export default api;

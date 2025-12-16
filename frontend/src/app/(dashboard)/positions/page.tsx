@@ -12,8 +12,11 @@ import { positionsService } from '@/services/api/positions.service';
 import { useDepartments } from '@/hooks/useDepartments';
 import { Position, CreatePositionDTO } from '@/types/position.types';
 import { formatDate } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { hasPermission } from '@/lib/rolePermissions';
 
 export default function PositionsPage() {
+  const { user } = useAuth();
   const router = useRouter();
   const { departments, isLoading: deptsLoading, error: deptsError } = useDepartments();
 
@@ -115,7 +118,9 @@ export default function PositionsPage() {
             Manage positions within the Organization Structure module.
           </p>
         </div>
-        <Button onClick={() => setIsCreating(true)}>+ New Position</Button>
+        {hasPermission(user?.role || '', 'canCreatePositions') && (
+          <Button onClick={() => setIsCreating(true)}>+ New Position</Button>
+        )}
       </div>
 
       {(error || deptsError) && (

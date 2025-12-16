@@ -9,8 +9,11 @@ import Button from '@/components/common/Button';
 import Loading from '@/components/common/Loading';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import { formatDate } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { hasPermission } from '@/lib/rolePermissions';
 
 export default function TemplatesPage() {
+  const { user } = useAuth();
   const router = useRouter();
   const [templates, setTemplates] = useState<AppraisalTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,9 +47,11 @@ export default function TemplatesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Appraisal Templates</h1>
           <p className="text-gray-600 mt-1">Manage performance appraisal templates</p>
         </div>
-        <Button onClick={() => router.push('/performance/templates/new')}>
-          Create Template
-        </Button>
+        {hasPermission(user?.role || '', 'canCreateTemplates') && (
+          <Button onClick={() => router.push('/performance/templates/new')}>
+            Create Template
+          </Button>
+        )}
       </div>
 
       {error && (
@@ -57,13 +62,15 @@ export default function TemplatesPage() {
         <Card>
           <div className="text-center py-12">
             <p className="text-gray-500">No templates found</p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => router.push('/performance/templates/new')}
-            >
-              Create First Template
-            </Button>
+            {hasPermission(user?.role || '', 'canCreateTemplates') && (
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => router.push('/performance/templates/new')}
+              >
+                Create First Template
+              </Button>
+            )}
           </div>
         </Card>
       ) : (
@@ -89,16 +96,18 @@ export default function TemplatesPage() {
                     </span>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    router.push(`/performance/templates/${template._id}/edit`);
-                  }}
-                >
-                  Edit
-                </Button>
+                {hasPermission(user?.role || '', 'canUpdateTemplates') && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/performance/templates/${template._id}/edit`);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                )}
               </div>
             </Card>
           ))}

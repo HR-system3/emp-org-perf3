@@ -11,8 +11,11 @@ import ErrorMessage from '@/components/common/ErrorMessage';
 import { departmentsService } from '@/services/api/departments.service';
 import { Department, CreateDepartmentDTO } from '@/types/department.types';
 import { formatDate } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { hasPermission } from '@/lib/rolePermissions';
 
 export default function DepartmentsPage() {
+  const { user } = useAuth();
   const router = useRouter();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -89,7 +92,9 @@ export default function DepartmentsPage() {
             Manage organizational departments as part of the Organization Structure module.
           </p>
         </div>
-        <Button onClick={() => setIsCreating(true)}>+ New Department</Button>
+        {hasPermission(user?.role || '', 'canCreateDepartments') && (
+          <Button onClick={() => setIsCreating(true)}>+ New Department</Button>
+        )}
       </div>
 
       {error && <ErrorMessage message={error} onDismiss={() => setError(null)} />}

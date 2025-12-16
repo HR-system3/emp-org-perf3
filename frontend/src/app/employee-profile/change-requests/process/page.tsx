@@ -1,27 +1,28 @@
-// ./src/app/employee-profile/change-requests/process/page.tsx
+'use client';
 
-
-"use client";
-
-import { useState, FormEvent } from "react";
-import {api} from "@/lib/axios";
+import { useState, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
+import { api } from '@/lib/axios';
 import {
   EmployeeProfileChangeRequest,
   ProfileChangeStatus,
-} from "@/types/employeeProfile";
-import BackButton from "@/components/BackButton";
-import StatusBadge from "@/components/StatusBadge";
+} from '@/types/employeeProfile';
+import Card from '@/components/common/Card';
+import Button from '@/components/common/Button';
+import ErrorMessage from '@/components/common/ErrorMessage';
+import StatusBadge from '@/components/StatusBadge';
 
 const statuses: ProfileChangeStatus[] = [
-  "PENDING",
-  "APPROVED",
-  "REJECTED",
-  "CANCELED",
+  'PENDING',
+  'APPROVED',
+  'REJECTED',
+  'CANCELED',
 ];
 
 export default function ProcessChangeRequestPage() {
-  const [requestId, setRequestId] = useState("");
-  const [status, setStatus] = useState<ProfileChangeStatus>("APPROVED");
+  const router = useRouter();
+  const [requestId, setRequestId] = useState('');
+  const [status, setStatus] = useState<ProfileChangeStatus>('APPROVED');
   const [appliedChanges, setAppliedChanges] = useState(
     '{\n  "status": "ACTIVE"\n}'
   );
@@ -40,7 +41,7 @@ export default function ProcessChangeRequestPage() {
     try {
       let parsed: Record<string, any> | undefined = undefined;
 
-      if (appliedChanges.trim() && status === "APPROVED") {
+      if (appliedChanges.trim() && status === 'APPROVED') {
         parsed = JSON.parse(appliedChanges);
       }
 
@@ -57,15 +58,15 @@ export default function ProcessChangeRequestPage() {
     } catch (err: any) {
       console.error(err);
       if (err instanceof SyntaxError) {
-        setError("Invalid JSON in appliedChanges.");
+        setError('Invalid JSON in appliedChanges.');
       } else {
         const backendMessage =
           err?.response?.data?.message ||
           err?.response?.data ||
           err?.message ||
-          "Failed to process request.";
+          'Failed to process request.';
         setError(
-          typeof backendMessage === "string"
+          typeof backendMessage === 'string'
             ? backendMessage
             : JSON.stringify(backendMessage)
         );
@@ -76,39 +77,50 @@ export default function ProcessChangeRequestPage() {
   }
 
   return (
-    <main className="page">
-      <div className="card">
-        <BackButton />
+    <div className="max-w-7xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Process Change Request</h1>
+          <p className="text-gray-600 mt-1">
+            Enter a Request ID from the change requests list, set the new status, and
+            (optionally) provide a JSON payload with the fields that should be applied
+            to the employee profile when the request is approved.
+          </p>
+        </div>
+        <Button onClick={() => router.back()} variant="outline">
+          Back
+        </Button>
+      </div>
 
-        <h1>Process Change Request (HR Demo)</h1>
-        <p className="text-muted">
-          Enter a <strong>Request ID</strong> from the change requests list, set
-          the new status, and (optionally) provide a JSON payload with the
-          fields that should be applied to the employee profile when the request
-          is approved.
-        </p>
+      {error && <ErrorMessage message={error} onDismiss={() => setError(null)} />}
 
-        {error && <p className="error">Error: {error}</p>}
-
-        <form onSubmit={handleSubmit} style={{ marginTop: "1.25rem" }}>
-          <div className="form-grid">
-            <div className="form-row">
-              <label>Request ID *</label>
+      <Card title="Process Change Request">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Request ID *
+              </label>
               <input
+                type="text"
                 placeholder="e.g. ECR-1733..."
                 value={requestId}
                 onChange={(e) => setRequestId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
 
-            <div className="form-row">
-              <label>Status *</label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status *
+              </label>
               <select
                 value={status}
                 onChange={(e) =>
                   setStatus(e.target.value as ProfileChangeStatus)
                 }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 {statuses.map((s) => (
                   <option key={s} value={s}>
@@ -119,9 +131,9 @@ export default function ProcessChangeRequestPage() {
             </div>
           </div>
 
-          <div className="form-row" style={{ marginTop: "1rem" }}>
-            <label>
-              Applied Changes (JSON, used only when status is{" "}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Applied Changes (JSON, used only when status is{' '}
               <strong>APPROVED</strong>)
             </label>
             <textarea
@@ -129,34 +141,43 @@ export default function ProcessChangeRequestPage() {
               value={appliedChanges}
               onChange={(e) => setAppliedChanges(e.target.value)}
               placeholder={`{\n  "status": "INACTIVE"\n}`}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
             />
           </div>
 
-          <div
-            style={{
-              marginTop: "1.25rem",
-              display: "flex",
-              gap: "0.75rem",
-              alignItems: "center",
-            }}
-          >
-            <button type="submit" disabled={loading}>
-              {loading ? "Processing..." : "Process Request"}
-            </button>
+          <div className="flex gap-3">
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Processing...' : 'Process Request'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+            >
+              Cancel
+            </Button>
           </div>
         </form>
+      </Card>
 
-        {result && (
-          <div className="result-block">
-            <h2 style={{ marginBottom: "0.6rem" }}>Updated Request</h2>
-            <p style={{ marginBottom: "0.5rem" }}>
-              Status:{" "}
+      {result && (
+        <Card title="Updated Request">
+          <div className="space-y-4">
+            <div>
+              <span className="text-sm font-medium text-gray-700">Status: </span>
               <StatusBadge kind="changeRequest" value={result.status} />
-            </p>
-            <pre>{JSON.stringify(result, null, 2)}</pre>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 mb-2">
+                Updated request data:
+              </p>
+              <pre className="bg-gray-900 text-gray-100 rounded-lg p-4 overflow-auto max-h-96 text-sm">
+                {JSON.stringify(result, null, 2)}
+              </pre>
+            </div>
           </div>
-        )}
-      </div>
-    </main>
+        </Card>
+      )}
+    </div>
   );
 }

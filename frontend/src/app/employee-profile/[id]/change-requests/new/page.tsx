@@ -1,33 +1,33 @@
-// ./src/app/employee-profile/[id]/change-requests/new/page.tsx
+'use client';
 
-"use client";
-
-import { useParams } from "next/navigation";
-import { useState } from "react";
-import {api} from "@/lib/axios";
+import { useParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { api } from '@/lib/axios';
 import {
   ChangeRequestCategory,
   EmployeeProfileChangeRequest,
-} from "@/types/employeeProfile";
-import BackButton from "@/components/BackButton";
-
+} from '@/types/employeeProfile';
+import Card from '@/components/common/Card';
+import Button from '@/components/common/Button';
+import ErrorMessage from '@/components/common/ErrorMessage';
 
 const categories: ChangeRequestCategory[] = [
-  "PERSONAL_INFORMATION",
-  "JOB_INFORMATION",
-  "ORGANIZATIONAL_ASSIGNMENT",
-  "COMPENSATION_AND_BENEFITS",
-  "OTHER",
+  'PERSONAL_INFORMATION',
+  'JOB_INFORMATION',
+  'ORGANIZATIONAL_ASSIGNMENT',
+  'COMPENSATION_AND_BENEFITS',
+  'OTHER',
 ];
 
 export default function NewChangeRequestPage() {
   const params = useParams();
+  const router = useRouter();
   const employeeId = params.id as string;
 
   const [category, setCategory] = useState<ChangeRequestCategory>(
-    "PERSONAL_INFORMATION"
+    'PERSONAL_INFORMATION'
   );
-  const [reason, setReason] = useState("");
+  const [reason, setReason] = useState('');
   const [requestedChanges, setRequestedChanges] = useState(
     '{\n  "fieldName": "newValue"\n}'
   );
@@ -63,9 +63,9 @@ export default function NewChangeRequestPage() {
     } catch (err: any) {
       console.error(err);
       if (err instanceof SyntaxError) {
-        setError("Invalid JSON in requestedChanges");
+        setError('Invalid JSON in requestedChanges');
       } else {
-        setError(err.response?.data?.message || "Failed to create request");
+        setError(err.response?.data?.message || 'Failed to create request');
       }
     } finally {
       setLoading(false);
@@ -73,83 +73,108 @@ export default function NewChangeRequestPage() {
   }
 
   if (!employeeId) {
-    return <p>Missing employee id in URL.</p>;
+    return (
+      <div className="max-w-7xl mx-auto space-y-6">
+        <Card>
+          <p className="text-gray-500">Missing employee id in URL.</p>
+        </Card>
+      </div>
+    );
   }
 
   return (
-    <main style={{ padding: "2rem", maxWidth: 800, margin: "0 auto" }}>
-        <BackButton />
-      <h1>New Profile Change Request</h1>
-      <p>EmployeeProfileId: {employeeId}</p>
-
-      <form
-        onSubmit={handleSubmit}
-        style={{ display: "grid", gap: "0.8rem", marginTop: "1rem" }}
-      >
+    <div className="max-w-7xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <label>Category</label>
-          <select
-            value={category}
-            onChange={(e) =>
-              setCategory(e.target.value as ChangeRequestCategory)
-            }
-          >
-            {categories.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+          <h1 className="text-2xl font-bold text-gray-900">New Profile Change Request</h1>
+          <p className="text-gray-600 mt-1">
+            Submit a change request for employee profile. Employee Profile ID: {employeeId}
+          </p>
         </div>
+        <Button onClick={() => router.back()} variant="outline">
+          Back
+        </Button>
+      </div>
 
-        <div>
-          <label>Reason (free text)</label>
-          <textarea
-            rows={3}
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-          />
-        </div>
+      {error && <ErrorMessage message={error} onDismiss={() => setError(null)} />}
 
-        <div>
-          <label>Requested Changes (JSON)</label>
-          <textarea
-            rows={6}
-            value={requestedChanges}
-            onChange={(e) => setRequestedChanges(e.target.value)}
-          />
-          <small>
-            Example: {"{ \"primaryDepartmentId\": \"...\", \"status\": \"ACTIVE\" }"}
-          </small>
-        </div>
+      <Card title="Create Change Request">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category
+            </label>
+            <select
+              value={category}
+              onChange={(e) =>
+                setCategory(e.target.value as ChangeRequestCategory)
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c.replace(/_/g, ' ')}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Submitting..." : "Submit Change Request"}
-        </button>
-      </form>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Reason (free text)
+            </label>
+            <textarea
+              rows={3}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter reason for the change request..."
+            />
+          </div>
 
-      {error && (
-        <p style={{ color: "red", marginTop: "1rem" }}>
-          Error: {Array.isArray(error) ? error.join(", ") : error}
-        </p>
-      )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Requested Changes (JSON)
+            </label>
+            <textarea
+              rows={6}
+              value={requestedChanges}
+              onChange={(e) => setRequestedChanges(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+              placeholder='{"fieldName": "newValue"}'
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Example: {'{"primaryDepartmentId": "...", "status": "ACTIVE"}'}
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Submitting...' : 'Submit Change Request'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </Card>
 
       {result && (
-        <section style={{ marginTop: "1.5rem" }}>
-          <h2>Created Request</h2>
-          <pre
-            style={{
-              background: "#111",
-              color: "#0f0",
-              padding: "1rem",
-              borderRadius: 8,
-              overflowX: "auto",
-            }}
-          >
-            {JSON.stringify(result, null, 2)}
-          </pre>
-        </section>
+        <Card title="Created Request">
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Change request created successfully. Request ID: {result.requestId}
+            </p>
+            <pre className="bg-gray-900 text-gray-100 rounded-lg p-4 overflow-auto max-h-96 text-sm">
+              {JSON.stringify(result, null, 2)}
+            </pre>
+          </div>
+        </Card>
       )}
-    </main>
+    </div>
   );
 }
