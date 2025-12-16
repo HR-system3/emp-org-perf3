@@ -8,9 +8,12 @@ import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
 import Loading from '@/components/common/Loading';
 import ErrorMessage from '@/components/common/ErrorMessage';
+import { useAuth } from '@/hooks/useAuth';
+import { hasPermission } from '@/lib/rolePermissions';
 
 export default function AssignmentsPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -124,8 +127,18 @@ export default function AssignmentsPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
+      {!hasPermission(user?.role || '', 'canCreateAssignments') ? (
         <Card>
+          <div className="text-center py-12">
+            <p className="text-gray-500">You do not have permission to create assignments.</p>
+            <Button variant="outline" className="mt-4" onClick={() => router.back()}>
+              Back
+            </Button>
+          </div>
+        </Card>
+      ) : (
+        <form onSubmit={handleSubmit}>
+          <Card>
           <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -277,6 +290,7 @@ export default function AssignmentsPage() {
           </div>
         </Card>
       </form>
+      )}
     </div>
   );
 }

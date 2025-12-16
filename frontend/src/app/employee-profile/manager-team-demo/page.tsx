@@ -1,16 +1,19 @@
-// ./src/app/employee-profile/manager-team-demo/page.tsx
+'use client';
 
-"use client";
-
-import { useState } from "react";
-import {api} from "@/lib/axios";
-import { EmployeeProfile } from "@/types/employeeProfile";
-import BackButton from "@/components/BackButton";
-import Avatar from "@/components/Avatar";
-import StatusBadge from "@/components/StatusBadge";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { api } from '@/lib/axios';
+import { EmployeeProfile } from '@/types/employeeProfile';
+import Card from '@/components/common/Card';
+import Button from '@/components/common/Button';
+import ErrorMessage from '@/components/common/ErrorMessage';
+import Loading from '@/components/common/Loading';
+import Avatar from '@/components/Avatar';
+import StatusBadge from '@/components/StatusBadge';
 
 export default function ManagerTeamDemoPage() {
-  const [managerId, setManagerId] = useState("");
+  const router = useRouter();
+  const [managerId, setManagerId] = useState('');
   const [team, setTeam] = useState<EmployeeProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,99 +32,103 @@ export default function ManagerTeamDemoPage() {
       setTeam(res.data);
     } catch (err: any) {
       console.error(err);
-      setError(err.response?.data?.message || "Failed to load team");
+      setError(err.response?.data?.message || 'Failed to load team');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="page">
-      <section
-        className="card"
-        style={{ maxWidth: 900, margin: "0 auto" }}
-      >
-        <BackButton />
+    <div className="max-w-7xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Manager Team View</h1>
+          <p className="text-gray-600 mt-1">
+            View direct reports and basic team information for a manager. Paste
+            Manager&apos;s EmployeeProfile Mongo _id to load the team.
+          </p>
+        </div>
+        <Button onClick={() => router.back()} variant="outline">
+          Back
+        </Button>
+      </div>
 
-        <h1>Manager Team View (Demo)</h1>
-        <p>Paste Manager&apos;s EmployeeProfile Mongo _id.</p>
+      {error && <ErrorMessage message={error} onDismiss={() => setError(null)} />}
 
-        <form
-          onSubmit={handleLoad}
-          style={{ display: "flex", gap: "0.8rem", marginTop: "1rem" }}
-        >
+      <Card>
+        <form onSubmit={handleLoad} className="flex gap-3">
           <input
+            type="text"
             placeholder="Manager employeeProfile _id"
             value={managerId}
             onChange={(e) => setManagerId(e.target.value)}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
-          <button type="submit" disabled={loading}>
-            {loading ? "Loading..." : "Load Team"}
-          </button>
+          <Button type="submit" disabled={loading}>
+            {loading ? 'Loading...' : 'Load Team'}
+          </Button>
         </form>
+      </Card>
 
-        {error && (
-          <p style={{ color: "red", marginTop: "1rem" }}>
-            Error: {Array.isArray(error) ? error.join(", ") : error}
-          </p>
-        )}
+      {loading && <Loading text="Loading team..." />}
 
-        {team.length > 0 && (
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              marginTop: "1.5rem",
-            }}
-          >
-            <thead>
-              <tr>
-                <th style={{ borderBottom: "1px solid #333", textAlign: "left" }}>
-                  Name
-                </th>
-                <th style={{ borderBottom: "1px solid #333", textAlign: "left" }}>
-                  Employee #
-                </th>
-                <th style={{ borderBottom: "1px solid #333", textAlign: "left" }}>
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {team.map((emp) => (
-                <tr key={emp._id}>
-                  <td style={{ padding: "0.45rem 0.2rem" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <Avatar
-                        name={`${emp.firstName} ${emp.lastName}`}
-                        size={26}
-                      />
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 500 }}>
-                          {emp.firstName} {emp.lastName}
-                        </div>
-                        <div className="text-muted" style={{ fontSize: 11 }}>
-                          {emp.employeeNumber}
+      {team.length > 0 && (
+        <Card title="Team Members">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Name
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Employee #
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {team.map((emp) => (
+                  <tr key={emp._id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <Avatar
+                          name={`${emp.firstName} ${emp.lastName}`}
+                          size={40}
+                        />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {emp.firstName} {emp.lastName}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {emp.employeeNumber}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: "0.45rem 0.2rem", fontSize: 13 }}>
-                    {emp.employeeNumber}
-                  </td>
-                  <td style={{ padding: "0.45rem 0.2rem" }}>
-                    <StatusBadge kind="employee" value={emp.status} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {emp.employeeNumber}
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge kind="employee" value={emp.status} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
-        {!loading && !error && team.length === 0 && (
-          <p style={{ marginTop: "1rem" }}>No team members found.</p>
-        )}
-      </section>
-    </main>
+      {!loading && !error && team.length === 0 && managerId && (
+        <Card>
+          <div className="text-center py-8 text-gray-500">
+            <p>No team members found.</p>
+          </div>
+        </Card>
+      )}
+    </div>
   );
 }

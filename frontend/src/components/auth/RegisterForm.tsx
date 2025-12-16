@@ -141,9 +141,11 @@ export default function RegisterForm() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">Select a role (optional)</option>
-              <option value="EMPLOYEE">Employee</option>
-              <option value="HR_ADMIN">HR Admin</option>
-              <option value="MANAGER">Manager</option>
+              <option value="department employee">Department Employee</option>
+              <option value="HR Admin">HR Admin</option>
+              <option value="HR Manager">HR Manager</option>
+              <option value="System Admin">System Admin</option>
+              <option value="department head">Department Head</option>
             </select>
           </div>
 

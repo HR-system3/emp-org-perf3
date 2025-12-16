@@ -10,8 +10,11 @@ import Loading from '@/components/common/Loading';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import PerformanceStatusBadge from '@/components/performance/StatusBadge';
 import { formatDate } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { hasPermission } from '@/lib/rolePermissions';
 
 export default function CyclesPage() {
+  const { user } = useAuth();
   const router = useRouter();
   const [cycles, setCycles] = useState<AppraisalCycle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,9 +49,11 @@ export default function CyclesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Appraisal Cycles</h1>
           <p className="text-gray-600 mt-1">Manage performance appraisal cycles</p>
         </div>
-        <Button onClick={() => router.push('/performance/cycles/new')}>
-          Create Cycle
-        </Button>
+        {hasPermission(user?.role || '', 'canCreateCycles') && (
+          <Button onClick={() => router.push('/performance/cycles/new')}>
+            Create Cycle
+          </Button>
+        )}
       </div>
 
       {error && (

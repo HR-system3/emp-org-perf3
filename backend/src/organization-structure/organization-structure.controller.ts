@@ -9,6 +9,7 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -27,9 +28,14 @@ import { DelimitPositionDto } from './dto/delimit-position.dto';
 import { GetHierarchyQueryDto } from './dto/get-hierarchy-query.dto';
 import { SubmitChangeRequestDto } from './dto/submit-change-request.dto';
 import { ApproveChangeRequestDto } from './dto/approve-change-request.dto';
+import { AuthGuard } from '../auth/guards/authentication.guard';
+import { authorizationGaurd } from '../auth/guards/authorization.gaurd';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { Role } from '../auth/enums/roles.enum';
 
 @ApiTags('Organization Structure')
 @Controller('organization-structure')
+@UseGuards(AuthGuard, authorizationGaurd)
 export class OrganizationStructureController {
   constructor(
     private readonly organizationStructureService: OrganizationStructureService,
@@ -38,6 +44,7 @@ export class OrganizationStructureController {
   // ==================== Department Endpoints ====================
 
   @Post('departments')
+  @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.SYSTEM_ADMIN)
   @ApiOperation({
     summary: 'Create a new department',
     description: 'Creates a new department with the provided information (BR-5, BR-30)',
@@ -51,6 +58,7 @@ export class OrganizationStructureController {
   }
 
   @Get('departments')
+  @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.HR_EMPLOYEE, Role.SYSTEM_ADMIN, Role.DEPARTMENT_HEAD, Role.DEPARTMENT_EMPLOYEE)
   @ApiOperation({
     summary: 'Get all departments',
     description: 'Retrieves a list of all departments',
@@ -61,6 +69,7 @@ export class OrganizationStructureController {
   }
 
   @Get('departments/:id')
+  @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.HR_EMPLOYEE, Role.SYSTEM_ADMIN, Role.DEPARTMENT_HEAD, Role.DEPARTMENT_EMPLOYEE)
   @ApiOperation({
     summary: 'Get department by ID',
     description: 'Retrieves a specific department by its ID',
@@ -73,6 +82,7 @@ export class OrganizationStructureController {
   }
 
   @Put('departments/:id')
+  @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.SYSTEM_ADMIN)
   @ApiOperation({
     summary: 'Update department',
     description: 'Updates an existing department (REQ-OSM-02)',
@@ -91,6 +101,7 @@ export class OrganizationStructureController {
   // ==================== Position Endpoints ====================
 
   @Post('positions')
+  @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.SYSTEM_ADMIN)
   @ApiOperation({
     summary: 'Create a new position',
     description: 'Creates a new position with the provided information (BR-5, BR-10, BR-30)',
@@ -104,6 +115,7 @@ export class OrganizationStructureController {
   }
 
   @Get('positions')
+  @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.HR_EMPLOYEE, Role.SYSTEM_ADMIN, Role.DEPARTMENT_HEAD, Role.DEPARTMENT_EMPLOYEE)
   @ApiOperation({
     summary: 'Get all positions',
     description: 'Retrieves a list of all positions',
@@ -114,6 +126,7 @@ export class OrganizationStructureController {
   }
 
   @Get('positions/:id')
+  @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.HR_EMPLOYEE, Role.SYSTEM_ADMIN, Role.DEPARTMENT_HEAD, Role.DEPARTMENT_EMPLOYEE)
   @ApiOperation({
     summary: 'Get position by ID',
     description: 'Retrieves a specific position by its ID',
@@ -126,6 +139,7 @@ export class OrganizationStructureController {
   }
 
   @Put('positions/:id')
+  @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.SYSTEM_ADMIN)
   @ApiOperation({
     summary: 'Update position',
     description: 'Updates an existing position (REQ-OSM-02)',
@@ -142,6 +156,7 @@ export class OrganizationStructureController {
   }
 
   @Patch('positions/:id/deactivate')
+  @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.SYSTEM_ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Deactivate position',
@@ -155,6 +170,7 @@ export class OrganizationStructureController {
   }
 
   @Patch('positions/:id/delimit')
+  @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.SYSTEM_ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Delimit position',
@@ -174,6 +190,7 @@ export class OrganizationStructureController {
   // ==================== Hierarchy Endpoints ====================
 
   @Get('hierarchy')
+  @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.HR_EMPLOYEE, Role.SYSTEM_ADMIN, Role.DEPARTMENT_HEAD, Role.DEPARTMENT_EMPLOYEE)
   @ApiOperation({
     summary: 'Get organizational hierarchy',
     description: 'Gets full organizational hierarchy or subtree for a manager (REQ-SANV-01, REQ-SANV-02)',
@@ -187,6 +204,7 @@ export class OrganizationStructureController {
   }
 
   @Get('hierarchy/subtree/:managerId')
+  @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.HR_EMPLOYEE, Role.SYSTEM_ADMIN, Role.DEPARTMENT_HEAD, Role.DEPARTMENT_EMPLOYEE)
   @ApiOperation({
     summary: 'Get subtree for manager',
     description: 'Gets the organizational subtree for a specific manager (REQ-SANV-02)',
@@ -201,6 +219,7 @@ export class OrganizationStructureController {
   // ==================== Change Request Endpoints (REQ-OSM-03/04, BR-36) ====================
 
   @Post('change-requests')
+  @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD, Role.SYSTEM_ADMIN)
   @ApiOperation({
     summary: 'Submit change request',
     description: 'Submit a request for structural changes (REQ-OSM-03, BR-36: All changes must be made via workflow approval)',
@@ -220,6 +239,7 @@ export class OrganizationStructureController {
   }
 
   @Get('change-requests')
+  @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.HR_EMPLOYEE, Role.SYSTEM_ADMIN, Role.DEPARTMENT_HEAD)
   @ApiOperation({
     summary: 'Get all change requests',
     description: 'Retrieves a list of all change requests',
@@ -230,6 +250,7 @@ export class OrganizationStructureController {
   }
 
   @Get('change-requests/:id')
+  @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.HR_EMPLOYEE, Role.SYSTEM_ADMIN, Role.DEPARTMENT_HEAD)
   @ApiOperation({
     summary: 'Get change request by ID',
     description: 'Retrieves a specific change request by its ID',
@@ -242,6 +263,7 @@ export class OrganizationStructureController {
   }
 
   @Post('change-requests/:id/approve')
+  @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.SYSTEM_ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Approve or reject change request',

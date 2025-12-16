@@ -1,10 +1,9 @@
-// src/app/employee-profile/new/page.tsx
+'use client';
 
-"use client";
-
-import { useState, useEffect } from "react";
-import type { ChangeEvent, FormEvent } from "react";
-import {api} from "@/lib/axios";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import type { ChangeEvent, FormEvent } from 'react';
+import { api } from '@/lib/axios';
 import {
   ContractType,
   CreateEmployeeProfileDto,
@@ -12,8 +11,10 @@ import {
   EmployeeStatus,
   Gender,
   MaritalStatus,
-} from "@/types/employeeProfile";
-import BackButton from "@/components/BackButton";
+} from '@/types/employeeProfile';
+import Card from '@/components/common/Card';
+import Button from '@/components/common/Button';
+import ErrorMessage from '@/components/common/ErrorMessage';
 
 const contractTypes: ContractType[] = [
   "FULL_TIME_CONTRACT",
@@ -121,80 +122,99 @@ export default function CreateEmployeePage() {
     }
   }
 
+  const router = useRouter();
+
   return (
-    <main className="page">
-      <div className="card">
-        <BackButton />
-        <header style={{ marginBottom: "1.25rem" }}>
-          <h1>Create Employee Profile (HR)</h1>
-          <p className="text-muted">
-            Use this form to onboard a new employee into the system. Required
-            fields cover personal info, employment details and basic
-            classification (contract, status, department).
+    <div className="max-w-7xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Create Employee Profile</h1>
+          <p className="text-gray-600 mt-1">
+            Use this form to onboard a new employee into the system. Required fields cover personal info, employment details and basic classification.
           </p>
-        </header>
+        </div>
+        <Button onClick={() => router.back()} variant="outline">
+          Back
+        </Button>
+      </div>
 
-        {error && <p className="error">Error: {error}</p>}
-        {result && !error && (
-          <p className="success">
-            Employee created successfully. You can copy the Mongo{" "}
-            <code>_id</code> and employee number from the JSON below.
-          </p>
-        )}
+      {error && <ErrorMessage message={error} onDismiss={() => setError(null)} />}
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-grid">
+      {toast && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-2">
+          <span className="text-green-600">✅</span>
+          <p className="text-sm text-green-800">{toast}</p>
+        </div>
+      )}
+
+      <Card title="Create Employee">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Employee number */}
-            <div className="form-row">
-              <label htmlFor="employeeNumber">Employee Number *</label>
+            <div>
+              <label htmlFor="employeeNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                Employee Number *
+              </label>
               <input
                 id="employeeNumber"
                 name="employeeNumber"
                 placeholder="EMP-0010"
                 value={form.employeeNumber}
                 onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
 
             {/* First / Last name */}
-            <div className="form-row">
-              <label htmlFor="firstName">First Name *</label>
+            <div>
+              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                First Name *
+              </label>
               <input
                 id="firstName"
                 name="firstName"
                 value={form.firstName}
                 onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
 
-            <div className="form-row">
-              <label htmlFor="lastName">Last Name *</label>
+            <div>
+              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                Last Name *
+              </label>
               <input
                 id="lastName"
                 name="lastName"
                 value={form.lastName}
                 onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
 
             {/* National ID */}
-            <div className="form-row">
-              <label htmlFor="nationalId">National ID *</label>
+            <div>
+              <label htmlFor="nationalId" className="block text-sm font-medium text-gray-700 mb-1">
+                National ID *
+              </label>
               <input
                 id="nationalId"
                 name="nationalId"
                 value={form.nationalId}
                 onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
 
             {/* Email / phone */}
-            <div className="form-row">
-              <label htmlFor="email">Personal Email *</label>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Personal Email *
+              </label>
               <input
                 id="email"
                 type="email"
@@ -202,55 +222,68 @@ export default function CreateEmployeePage() {
                 placeholder="hatem@example.com"
                 value={form.email}
                 onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
 
-            <div className="form-row">
-              <label htmlFor="phone">Mobile Phone *</label>
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                Mobile Phone *
+              </label>
               <input
                 id="phone"
                 name="phone"
                 placeholder="+20..."
                 value={form.phone}
                 onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
 
             {/* Dates */}
-            <div className="form-row">
-              <label htmlFor="dateOfBirth">Date of Birth *</label>
+            <div>
+              <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-1">
+                Date of Birth *
+              </label>
               <input
                 id="dateOfBirth"
                 type="date"
                 name="dateOfBirth"
                 value={form.dateOfBirth}
                 onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
 
-            <div className="form-row">
-              <label htmlFor="dateOfHire">Date of Hire *</label>
+            <div>
+              <label htmlFor="dateOfHire" className="block text-sm font-medium text-gray-700 mb-1">
+                Date of Hire *
+              </label>
               <input
                 id="dateOfHire"
                 type="date"
                 name="dateOfHire"
                 value={form.dateOfHire}
                 onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
 
             {/* Contract / status */}
-            <div className="form-row">
-              <label htmlFor="contractType">Contract Type *</label>
+            <div>
+              <label htmlFor="contractType" className="block text-sm font-medium text-gray-700 mb-1">
+                Contract Type *
+              </label>
               <select
                 id="contractType"
                 name="contractType"
                 value={form.contractType}
                 onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 {contractTypes.map((ct) => (
                   <option key={ct} value={ct}>
@@ -260,13 +293,16 @@ export default function CreateEmployeePage() {
               </select>
             </div>
 
-            <div className="form-row">
-              <label htmlFor="status">Employment Status *</label>
+            <div>
+              <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+                Employment Status *
+              </label>
               <select
                 id="status"
                 name="status"
                 value={form.status}
                 onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 {statuses.map((st) => (
                   <option key={st} value={st}>
@@ -277,13 +313,16 @@ export default function CreateEmployeePage() {
             </div>
 
             {/* Gender / marital status */}
-            <div className="form-row">
-              <label htmlFor="gender">Gender</label>
+            <div>
+              <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
+                Gender
+              </label>
               <select
                 id="gender"
                 name="gender"
                 value={form.gender}
                 onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 {genders.map((g) => (
                   <option key={g} value={g}>
@@ -293,13 +332,16 @@ export default function CreateEmployeePage() {
               </select>
             </div>
 
-            <div className="form-row">
-              <label htmlFor="maritalStatus">Marital Status</label>
+            <div>
+              <label htmlFor="maritalStatus" className="block text-sm font-medium text-gray-700 mb-1">
+                Marital Status
+              </label>
               <select
                 id="maritalStatus"
                 name="maritalStatus"
                 value={form.maritalStatus}
                 onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 {maritalStatuses.map((m) => (
                   <option key={m} value={m}>
@@ -310,42 +352,51 @@ export default function CreateEmployeePage() {
             </div>
 
             {/* Position / department */}
-            <div className="form-row">
-              <label htmlFor="positionTitle">Position Title</label>
+            <div>
+              <label htmlFor="positionTitle" className="block text-sm font-medium text-gray-700 mb-1">
+                Position Title
+              </label>
               <input
                 id="positionTitle"
                 name="positionTitle"
                 placeholder="Software Developer"
                 value={form.positionTitle}
                 onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
-            <div className="form-row">
-              <label htmlFor="departmentName">Department Name</label>
+            <div>
+              <label htmlFor="departmentName" className="block text-sm font-medium text-gray-700 mb-1">
+                Department Name
+              </label>
               <input
                 id="departmentName"
                 name="departmentName"
                 placeholder="IT"
                 value={form.departmentName}
                 onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
             {/* Department code / pay grade */}
-            <div className="form-row">
-              <label htmlFor="departmentCode">Department Code</label>
+            <div>
+              <label htmlFor="departmentCode" className="block text-sm font-medium text-gray-700 mb-1">
+                Department Code
+              </label>
               <input
                 id="departmentCode"
                 name="departmentCode"
                 placeholder="DEPT-IT"
                 value={form.departmentCode || ""}
                 onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
-            <div className="form-row">
-              <label htmlFor="payGradeId">
+            <div>
+              <label htmlFor="payGradeId" className="block text-sm font-medium text-gray-700 mb-1">
                 Pay Grade ID (Mongo ObjectId, optional)
               </label>
               <input
@@ -354,39 +405,38 @@ export default function CreateEmployeePage() {
                 placeholder="optional"
                 value={form.payGradeId || ""}
                 onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
 
-          <div
-            style={{
-              marginTop: "1.25rem",
-              display: "flex",
-              gap: "0.75rem",
-              alignItems: "center",
-            }}
-          >
-            <button type="submit" disabled={loading}>
+          <div className="flex gap-3">
+            <Button type="submit" disabled={loading}>
               {loading ? "Creating..." : "Create Employee"}
-            </button>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+            >
+              Cancel
+            </Button>
           </div>
         </form>
+      </Card>
 
-        {result && (
-          <div className="result-block">
-            <h2 style={{ marginBottom: "0.6rem" }}>Created Employee</h2>
-            <pre>{JSON.stringify(result, null, 2)}</pre>
+      {result && (
+        <Card title="Created Employee">
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Employee created successfully. You can copy the Mongo <code className="bg-gray-100 px-1 rounded">_id</code> and employee number from the JSON below.
+            </p>
+            <pre className="bg-gray-900 text-gray-100 rounded-lg p-4 overflow-auto max-h-96 text-sm">
+              {JSON.stringify(result, null, 2)}
+            </pre>
           </div>
-        )}
-      </div>
-
-      {/* Toast */}
-      {toast && (
-        <div className="toast">
-          <span>✅</span>
-          <span>{toast}</span>
-        </div>
+        </Card>
       )}
-    </main>
+    </div>
   );
 }

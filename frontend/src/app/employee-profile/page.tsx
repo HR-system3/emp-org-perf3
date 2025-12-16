@@ -1,15 +1,18 @@
-// ./src/app/employee-profile/page.tsx
+'use client';
 
-"use client";
-
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import {api} from "@/lib/axios";
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { api } from '@/lib/axios';
 import {
   EmployeeProfile,
   EmployeeProfileChangeRequest,
-} from "@/types/employeeProfile";
-import BackToMainButton from "@/components/BackToMainButton";
+} from '@/types/employeeProfile';
+import Card from '@/components/common/Card';
+import Button from '@/components/common/Button';
+import Loading from '@/components/common/Loading';
+import ErrorMessage from '@/components/common/ErrorMessage';
+import { useAuth } from '@/hooks/useAuth';
+import { hasPermission } from '@/lib/rolePermissions';
 
 type EmployeesOverview = {
   total: number;
@@ -25,6 +28,7 @@ type ChangeRequestsOverview = {
 };
 
 export default function EmployeeProfileHomePage() {
+  const { user } = useAuth();
   const [employeesOverview, setEmployeesOverview] =
     useState<EmployeesOverview | null>(null);
   const [changeOverview, setChangeOverview] =
@@ -38,38 +42,43 @@ export default function EmployeeProfileHomePage() {
 
     try {
       // ----- Employees -----
-      const employeesRes = await api.get<EmployeeProfile[]>("/employee-profile");
+      const employeesRes = await api.get<EmployeeProfile[]>('/employee-profile');
       const employees = employeesRes.data;
 
       const empSummary: EmployeesOverview = {
         total: employees.length,
-        active: employees.filter((e) => e.status === "ACTIVE").length,
-        onLeave: employees.filter((e) => e.status === "ON_LEAVE").length,
-        terminated: employees.filter((e) => e.status === "TERMINATED").length,
+        active: employees.filter((e) => e.status === 'ACTIVE').length,
+        onLeave: employees.filter((e) => e.status === 'ON_LEAVE').length,
+        terminated: employees.filter((e) => e.status === 'TERMINATED').length,
       };
       setEmployeesOverview(empSummary);
 
       // ----- Change requests -----
       const crRes = await api.get<EmployeeProfileChangeRequest[]>(
-        "/employee-profile/change-requests"
+        '/employee-profile/change-requests'
       );
       const cr = crRes.data;
 
       const crSummary: ChangeRequestsOverview = {
-        pending: cr.filter((c) => c.status === "PENDING").length,
-        approved: cr.filter((c) => c.status === "APPROVED").length,
-        rejected: cr.filter((c) => c.status === "REJECTED").length,
+        pending: cr.filter((c) => c.status === 'PENDING').length,
+        approved: cr.filter((c) => c.status === 'APPROVED').length,
+        rejected: cr.filter((c) => c.status === 'REJECTED').length,
       };
       setChangeOverview(crSummary);
     } catch (err: any) {
       console.error(err);
+      // Don't show error if it's an authentication error (401) - the interceptor will redirect
+      if (err?.response?.status === 401) {
+        setLoading(false);
+        return;
+      }
       const backendMessage =
         err?.response?.data?.message ||
         err?.response?.data ||
         err?.message ||
-        "Failed to load overview data.";
+        'Failed to load overview data.';
       setError(
-        typeof backendMessage === "string"
+        typeof backendMessage === 'string'
           ? backendMessage
           : JSON.stringify(backendMessage)
       );
@@ -83,317 +92,164 @@ export default function EmployeeProfileHomePage() {
   }, []);
 
   return (
-    <main
-      className="page"
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      {/* Main dark card */}
-      <section
-        className="card"
-        style={{
-          width: "min(1100px, 100%)",
-          background:
-            "radial-gradient(circle at top left, rgba(255,255,255,0.06), transparent 55%) #050816",
-          borderRadius: "24px",
-          padding: "2.4rem 2.8rem",
-          boxShadow: "0 32px 60px rgba(0,0,0,0.6)",
-          border: "1px solid rgba(255,255,255,0.08)",
-        }}
-      >
-        {/* Header */}
-        <header style={{ marginBottom: "1.5rem" }}>
-          <BackToMainButton />
-          <h1
-            style={{
-              fontSize: "1.8rem",
-              fontWeight: 700,
-              marginBottom: "0.4rem",
-            }}
-          >
-            Employee Profile – Frontend Sandbox
-          </h1>
-          <p className="text-muted" style={{ maxWidth: "620px" }}>
-            Choose one of the flows below to demo the Employee Profile
-            subsystem. HR users create and maintain profiles, while employees
-            and managers use self-service and insight screens.
-          </p>
-          {error && (
-            <p
-              style={{
-                marginTop: "0.75rem",
-                color: "#f97373",
-                fontSize: "0.9rem",
-              }}
-            >
-              Error loading overview: {error}
-            </p>
-          )}
-        </header>
+    <div className="max-w-7xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Employee Profile</h1>
+        <p className="text-gray-600 mt-2">
+          Manage employee profiles, create new employees, and review profile change requests.
+        </p>
+      </div>
 
-        {/* 2-column layout inside the card */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1.3fr)",
-            gap: "1.5rem",
-          }}
-        >
-          {/* LEFT: list of flows */}
-          <div>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: "0.9rem" }}>
+      {error && <ErrorMessage message={error} onDismiss={() => setError(null)} />}
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card className="hover:shadow-lg transition-shadow">
+          <div className="text-center">
+            <div className="text-5xl mb-2">👥</div>
+            <h3 className="text-2xl font-bold text-gray-900">
+              {employeesOverview ? employeesOverview.total : '—'}
+            </h3>
+            <p className="text-gray-600">Total Employees</p>
+            <div className="mt-2 text-sm text-gray-500">
+              {employeesOverview ? employeesOverview.active : '—'} active ·{' '}
+              {employeesOverview ? employeesOverview.onLeave : '—'} on leave ·{' '}
+              {employeesOverview ? employeesOverview.terminated : '—'} terminated
+            </div>
+          </div>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <div className="text-center">
+            <div className="text-5xl mb-2">📝</div>
+            <h3 className="text-2xl font-bold text-yellow-600">
+              {changeOverview ? changeOverview.pending : '—'}
+            </h3>
+            <p className="text-gray-600">Pending Requests</p>
+            <div className="mt-2 text-sm text-gray-500">
+              {changeOverview ? changeOverview.approved : '—'} approved ·{' '}
+              {changeOverview ? changeOverview.rejected : '—'} rejected
+            </div>
+          </div>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <div className="text-center">
+            <Button onClick={loadOverview} disabled={loading} size="sm">
+              {loading ? 'Refreshing…' : 'Refresh Data'}
+            </Button>
+            <p className="text-gray-600 mt-4 text-sm">
+              Update overview statistics
+            </p>
+          </div>
+        </Card>
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Employee Management Section */}
+        {(hasPermission(user?.role || '', 'canCreateEmployee') || 
+          hasPermission(user?.role || '', 'canSearchEmployee') || 
+          hasPermission(user?.role || '', 'canViewAllEmployees') || 
+          hasPermission(user?.role || '', 'canViewSelfService') || 
+          hasPermission(user?.role || '', 'canViewManagerTeam')) && (
+          <Card title="Employee Management">
+            <div className="space-y-3">
+              {hasPermission(user?.role || '', 'canCreateEmployee') && (
                 <Link
                   href="/employee-profile/new"
-                  style={{ fontWeight: 600, color: "#60a5fa" }}
+                  className="block p-3 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors"
                 >
-                  ➤ Create Employee Profile (HR)
+                  <h4 className="font-medium text-emerald-900">Create Employee Profile</h4>
+                  <p className="text-sm text-emerald-700">
+                    Onboard a new employee with personal, contract, and organizational info.
+                  </p>
                 </Link>
-                <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-                  Onboard a new employee with personal, contract, and
-                  organizational info.
-                </p>
-              </li>
+              )}
 
-              <li style={{ marginBottom: "0.9rem" }}>
+              {hasPermission(user?.role || '', 'canSearchEmployee') && (
                 <Link
                   href="/employee-profile/search-by-number"
-                  style={{ fontWeight: 600, color: "#60a5fa" }}
+                  className="block p-3 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors"
                 >
-                  ➤ Search Employee by Employee Number (HR)
+                  <h4 className="font-medium text-teal-900">Search Employee by Number</h4>
+                  <p className="text-sm text-teal-700">
+                    Quickly look up an existing employee using their employee number.
+                  </p>
                 </Link>
-                <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-                  Quickly look up an existing employee using their employee
-                  number (e.g., EMP-0012).
-                </p>
-              </li>
+              )}
 
-              <li style={{ marginBottom: "0.9rem" }}>
-                <Link
-                  href="/employee-profile/self-demo"
-                  style={{ fontWeight: 600, color: "#60a5fa" }}
-                >
-                  ➤ Self-Service Profile (Employee demo)
-                </Link>
-                <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-                  Simulates an employee viewing and editing their own profile via
-                  a self-service screen.
-                </p>
-              </li>
-
-              <li style={{ marginBottom: "0.9rem" }}>
-                <Link
-                  href="/employee-profile/change-requests"
-                  style={{ fontWeight: 600, color: "#60a5fa" }}
-                >
-                  ➤ List Change Requests (HR)
-                </Link>
-                <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-                  Review all submitted profile change requests and filter by
-                  status (Pending, Approved, Rejected, Canceled).
-                </p>
-              </li>
-
-             
-
-              <li style={{ marginBottom: "0.9rem" }}>
-                <Link
-                  href="/employee-profile/change-requests/process"
-                  style={{ fontWeight: 600, color: "#60a5fa" }}
-                >
-                  ➤ Process Change Request (HR demo)
-                </Link>
-                <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-                  Process a specific change request by Request ID, update its
-                  status and optionally apply the changes to the employee
-                  profile.
-                </p>
-              </li>
-
-              <li>
-                <Link
-                  href="/employee-profile/manager-team-demo"
-                  style={{ fontWeight: 600, color: "#60a5fa" }}
-                >
-                  ➤ Manager Team View (demo)
-                </Link>
-                <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-                  Paste a manager&apos;s EmployeeProfile Mongo <code>_id</code>{" "}
-                  to load their direct reports and basic team information.
-                </p>
-              </li>
-
-              <li style={{ marginBottom: "0.9rem" }}>
+              {hasPermission(user?.role || '', 'canViewAllEmployees') && (
                 <Link
                   href="/employee-profile/employees"
-                  style={{ fontWeight: 600, color: "#60a5fa" }}
+                  className="block p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                 >
-                  ➤ Employees Directory (HR)
+                  <h4 className="font-medium text-blue-900">Employees Directory</h4>
+                  <p className="text-sm text-blue-700">
+                    Browse all employees in the system, filter by name/number/status.
+                  </p>
                 </Link>
-                <p className="text-muted" style={{ marginTop: "0.25rem" }}>
-                  Browse all employees in the system, filter by name/number/
-                  status, and open any profile.
-                </p>
-              </li>
-            </ul>
-          </div>
+              )}
 
-          {/* RIGHT: three small cards stacked */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.9rem",
-            }}
-          >
-            {/* Employees overview card */}
-            <div
-              style={{
-                borderRadius: "18px",
-                border: "1px solid rgba(255,255,255,0.08)",
-                background: "rgba(15,23,42,0.9)",
-                padding: "1rem 1.1rem",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "0.45rem",
-                }}
-              >
-                <span
-                  style={{ fontSize: "0.95rem", fontWeight: 600, color: "#e5e7eb" }}
+              {hasPermission(user?.role || '', 'canViewSelfService') && (
+                <Link
+                  href="/employee-profile/self-demo"
+                  className="block p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
                 >
-                  Employees overview
-                </span>
-                <button
-                  type="button"
-                  onClick={loadOverview}
-                  disabled={loading}
-                  style={{
-                    borderRadius: "999px",
-                    border: "none",
-                    padding: "0.28rem 0.8rem",
-                    fontSize: "0.8rem",
-                    fontWeight: 600,
-                    background:
-                      "linear-gradient(135deg, #3b82f6, #22c1c3)",
-                    color: "white",
-                    cursor: loading ? "default" : "pointer",
-                    opacity: loading ? 0.7 : 1,
-                  }}
+                  <h4 className="font-medium text-purple-900">Self-Service Profile</h4>
+                  <p className="text-sm text-purple-700">
+                    Employee self-service screen for viewing and editing their own profile.
+                  </p>
+                </Link>
+              )}
+
+              {hasPermission(user?.role || '', 'canViewManagerTeam') && (
+                <Link
+                  href="/employee-profile/manager-team-demo"
+                  className="block p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
                 >
-                  {loading ? "Refreshing…" : "Refresh"}
-                </button>
-              </div>
-
-              <p
-                style={{
-                  fontSize: "1.3rem",
-                  fontWeight: 700,
-                  marginBottom: "0.2rem",
-                }}
-              >
-                {employeesOverview ? employeesOverview.total : "–"} employees
-              </p>
-              <p
-                className="text-muted"
-                style={{ fontSize: "0.85rem", marginBottom: "0.4rem" }}
-              >
-                {employeesOverview ? employeesOverview.active : "–"} active ·{" "}
-                {employeesOverview ? employeesOverview.onLeave : "–"} on leave ·{" "}
-                {employeesOverview ? employeesOverview.terminated : "–"} terminated
-              </p>
-
-              <Link
-                href="/employee-profile/employees"
-                style={{
-                  fontSize: "0.82rem",
-                  color: "#93c5fd",
-                  textDecoration: "underline",
-                }}
-              >
-                Open employees directory
-              </Link>
+                  <h4 className="font-medium text-indigo-900">Manager Team View</h4>
+                  <p className="text-sm text-indigo-700">
+                    View direct reports and basic team information for a manager.
+                  </p>
+                </Link>
+              )}
             </div>
+          </Card>
+        )}
 
-            {/* Change requests overview card */}
-            <div
-              style={{
-                borderRadius: "18px",
-                border: "1px solid rgba(255,255,255,0.08)",
-                background: "rgba(15,23,42,0.9)",
-                padding: "1rem 1.1rem",
-              }}
-            >
-              <span
-                style={{ fontSize: "0.95rem", fontWeight: 600, color: "#e5e7eb" }}
-              >
-                Change requests
-              </span>
+        {/* Change Requests Section */}
+        {(hasPermission(user?.role || '', 'canViewChangeRequests') || 
+          hasPermission(user?.role || '', 'canProcessChangeRequests')) && (
+          <Card title="Change Requests">
+            <div className="space-y-3">
+              {hasPermission(user?.role || '', 'canViewChangeRequests') && (
+                <Link
+                  href="/employee-profile/change-requests"
+                  className="block p-3 bg-sky-50 rounded-lg hover:bg-sky-100 transition-colors"
+                >
+                  <h4 className="font-medium text-sky-900">List Change Requests</h4>
+                  <p className="text-sm text-sky-700">
+                    Review all submitted profile change requests and filter by status.
+                  </p>
+                </Link>
+              )}
 
-              <p
-                style={{
-                  fontSize: "1.3rem",
-                  fontWeight: 700,
-                  margin: "0.4rem 0 0.2rem",
-                }}
-              >
-                {changeOverview ? changeOverview.pending : "–"} pending
-              </p>
-              <p
-                className="text-muted"
-                style={{ fontSize: "0.85rem", marginBottom: "0.4rem" }}
-              >
-                {changeOverview ? changeOverview.approved : "–"} approved ·{" "}
-                {changeOverview ? changeOverview.rejected : "–"} rejected
-              </p>
-
-              <Link
-                href="/employee-profile/change-requests"
-                style={{
-                  fontSize: "0.82rem",
-                  color: "#93c5fd",
-                  textDecoration: "underline",
-                }}
-              >
-                Open change requests
-              </Link>
+              {hasPermission(user?.role || '', 'canProcessChangeRequests') && (
+                <Link
+                  href="/employee-profile/change-requests/process"
+                  className="block p-3 bg-cyan-50 rounded-lg hover:bg-cyan-100 transition-colors"
+                >
+                  <h4 className="font-medium text-cyan-900">Process Change Request</h4>
+                  <p className="text-sm text-cyan-700">
+                    Process a specific change request by Request ID and update status.
+                  </p>
+                </Link>
+              )}
             </div>
-
-            {/* Demo notes card */}
-            <div
-              style={{
-                borderRadius: "18px",
-                border: "1px solid rgba(255,255,255,0.08)",
-                background: "rgba(15,23,42,0.8)",
-                padding: "1rem 1.1rem",
-              }}
-            >
-              <span
-                style={{ fontSize: "0.95rem", fontWeight: 600, color: "#e5e7eb" }}
-              >
-                Demo notes
-              </span>
-              <p
-                className="text-muted"
-                style={{ fontSize: "0.85rem", marginTop: "0.45rem" }}
-              >
-                For now, some demo screens still ask you to paste MongoDB IDs
-                manually. In a real integrated system these values would come
-                from authentication and from the Organization Structure
-                subsystem.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
+          </Card>
+        )}
+      </div>
+    </div>
   );
 }
