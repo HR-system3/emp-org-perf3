@@ -43,9 +43,30 @@ export default function DepartmentDetailsPage() {
     const isDepartmentEmployee = normalizedRole === 'department employee';
     const isDepartmentHead = normalizedRole === 'department head';
 
-    if ((isDepartmentEmployee || isDepartmentHead) && user?.departmentId && user.departmentId !== id) {
-      setIsForbidden(true);
-      setIsLoading(false);
+    if (isDepartmentEmployee || isDepartmentHead) {
+      const enforce = async () => {
+        try {
+          const profile = await api.get('/employee-profile/me/self').then((r) => r.data);
+          const myDeptId =
+            (profile?.primaryDepartmentId && typeof profile.primaryDepartmentId === 'object'
+              ? profile.primaryDepartmentId._id || profile.primaryDepartmentId.id || profile.primaryDepartmentId
+              : profile?.primaryDepartmentId) || '';
+          if (!myDeptId || myDeptId !== id) {
+            setIsForbidden(true);
+            setIsLoading(false);
+            return;
+          }
+          fetchDepartment();
+          fetchPositions();
+          if (user && hasPermission(user.role || '', 'canViewAllEmployees')) {
+            fetchEmployees();
+          }
+        } catch (err) {
+          setIsForbidden(true);
+          setIsLoading(false);
+        }
+      };
+      enforce();
       return;
     }
 

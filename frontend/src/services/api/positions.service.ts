@@ -31,9 +31,10 @@ function mapPosition(api: PositionApi): Position {
 }
 
 export const positionsService = {
-  async getAllPositions(): Promise<Position[]> {
+  async getAllPositions(departmentId?: string): Promise<Position[]> {
     const response = await api.get<PositionApi[]>(
       '/organization-structure/positions',
+      { params: departmentId ? { departmentId } : undefined },
     );
     return response.data.map(mapPosition);
   },

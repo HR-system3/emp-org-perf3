@@ -513,6 +513,47 @@ async createEmployeeProfile(
       .exec();
   }
 
+  /**
+   * Get direct reports for a department head (or any manager) based on:
+   * - supervisorPositionId matching the head's primaryPositionId
+   * - OR employee primaryPositionId belongs to a position that reports to head's position
+   * Filters to the same primaryDepartmentId as the head.
+   */
+  async getReportsForHead(employeeProfileId: string): Promise<EmployeeProfile[]> {
+    const head = await this.employeeProfileModel.findById(employeeProfileId).lean();
+    if (!head?.primaryPositionId) {
+      return [];
+    }
+    const headPosId = head.primaryPositionId.toString();
+    const headDeptId = head.primaryDepartmentId?.toString();
+
+    // Positions that report to head's position
+    const reportingPositions = await this.positionModel
+      .find({ reportsToPositionId: head.primaryPositionId })
+      .select('_id')
+      .lean();
+    const reportingPosIds = reportingPositions.map((p) => p._id.toString());
+
+    const filter: any = {
+      $or: [
+        { supervisorPositionId: headPosId },
+        { primaryPositionId: { $in: reportingPosIds } },
+      ],
+    };
+    if (headDeptId) {
+      filter.primaryDepartmentId = headDeptId;
+    }
+
+    return this.employeeProfileModel
+      .find(filter)
+      .select(
+        'firstName lastName employeeNumber status primaryPositionId primaryDepartmentId',
+      )
+      .populate('primaryPositionId')
+      .populate('primaryDepartmentId')
+      .exec();
+  }
+
   // ---------------------------------------------------------------------------
   // CHANGE REQUESTS – Workflow (Employee + HR) – US-E6-02, US-E2-03
   // ---------------------------------------------------------------------------
