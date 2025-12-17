@@ -10,10 +10,13 @@ import Loading from '@/components/common/Loading';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import PerformanceStatusBadge from '@/components/performance/StatusBadge';
 import { formatDate } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { isManager, isHRAdmin } from '@/lib/performanceRoles';
 
 export default function DisputeDetailsPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const id = params.id as string;
   const [dispute, setDispute] = useState<AppraisalDispute | null>(null);
   const [loading, setLoading] = useState(true);
@@ -87,7 +90,10 @@ export default function DisputeDetailsPage() {
     return <Loading text="Loading..." />;
   }
 
-  const canResolve = dispute.status === AppraisalDisputeStatus.OPEN || dispute.status === AppraisalDisputeStatus.UNDER_REVIEW;
+  // Only Managers and HR Admins can resolve disputes
+  const canResolve = 
+    (isManager(user?.role) || isHRAdmin(user?.role)) &&
+    (dispute.status === AppraisalDisputeStatus.OPEN || dispute.status === AppraisalDisputeStatus.UNDER_REVIEW);
 
   return (
     <div className="space-y-6">

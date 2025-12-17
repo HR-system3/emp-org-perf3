@@ -10,10 +10,13 @@ import Loading from '@/components/common/Loading';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import PerformanceStatusBadge from '@/components/performance/StatusBadge';
 import { formatDate } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { isEmployee, isManager, isHRAdmin } from '@/lib/performanceRoles';
 
 export default function RecordDetailsPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const id = params.id as string;
   const [record, setRecord] = useState<AppraisalRecord | null>(null);
   const [template, setTemplate] = useState<AppraisalTemplate | null>(null);
@@ -138,13 +141,29 @@ export default function RecordDetailsPage() {
     return <Loading text="Loading..." />;
   }
 
-  const canEdit = record.status === AppraisalRecordStatus.DRAFT;
-  const canSubmit = record.status === AppraisalRecordStatus.DRAFT;
-  const canPublish = record.status === AppraisalRecordStatus.MANAGER_SUBMITTED;
+  // Role-based permissions
+  // Managers can edit and submit records
+  const canEdit = 
+    (isManager(user?.role) || isHRAdmin(user?.role)) && 
+    record.status === AppraisalRecordStatus.DRAFT;
+  const canSubmit = 
+    (isManager(user?.role) || isHRAdmin(user?.role)) && 
+    record.status === AppraisalRecordStatus.DRAFT;
+  // Only HR Admin can publish records
+  const canPublish = 
+    isHRAdmin(user?.role) && 
+    record.status === AppraisalRecordStatus.MANAGER_SUBMITTED;
+  // Only Employees can acknowledge their own records
   const canAcknowledge =
-    record.status === AppraisalRecordStatus.HR_PUBLISHED && !record.employeeAcknowledgedAt;
-  // Employee can raise dispute on a published appraisal
-  const canRaiseDispute = record.status === AppraisalRecordStatus.HR_PUBLISHED;
+    isEmployee(user?.role) &&
+    record.status === AppraisalRecordStatus.HR_PUBLISHED && 
+    !record.employeeAcknowledgedAt &&
+    record.employeeProfileId === user?.id;
+  // Only Employees can raise disputes on their own published appraisals
+  const canRaiseDispute = 
+    isEmployee(user?.role) &&
+    record.status === AppraisalRecordStatus.HR_PUBLISHED &&
+    record.employeeProfileId === user?.id;
 
   return (
     <div className="space-y-6">

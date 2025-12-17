@@ -10,6 +10,7 @@ import Loading from '@/components/common/Loading';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import { useAuth } from '@/hooks/useAuth';
 import { hasPermission } from '@/lib/rolePermissions';
+import { isHRAdmin } from '@/lib/performanceRoles';
 
 export default function AssignmentsPage() {
   const router = useRouter();
@@ -127,10 +128,10 @@ export default function AssignmentsPage() {
         </div>
       )}
 
-      {!hasPermission(user?.role || '', 'canCreateAssignments') ? (
+      {!isHRAdmin(user?.role) ? (
         <Card>
           <div className="text-center py-12">
-            <p className="text-gray-500">You do not have permission to create assignments.</p>
+            <p className="text-gray-500">Only HR Admins can access bulk assignments.</p>
             <Button variant="outline" className="mt-4" onClick={() => router.back()}>
               Back
             </Button>

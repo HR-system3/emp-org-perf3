@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { ROUTES } from '@/lib/constants';
 import { useAuth } from '@/hooks/useAuth';
 import { hasPermission } from '@/lib/rolePermissions';
+import { performanceFeatureAccess } from '@/lib/performanceRoles';
 
 interface NavItem {
   name: string;
@@ -75,7 +76,31 @@ export default function Navigation() {
       return true;
     }
     
-    // Check if user has the required permission
+    // Special handling for Performance Management items
+    if (item.href.startsWith('/performance/')) {
+      if (!user?.role) {
+        return false;
+      }
+      
+      // Use performance-specific role checks
+      if (item.href === ROUTES.PERFORMANCE_TEMPLATES) {
+        return performanceFeatureAccess.canViewTemplates(user.role);
+      }
+      if (item.href === ROUTES.PERFORMANCE_CYCLES) {
+        return performanceFeatureAccess.canViewCycles(user.role);
+      }
+      if (item.href === ROUTES.PERFORMANCE_ASSIGNMENTS) {
+        return performanceFeatureAccess.canViewAssignments(user.role);
+      }
+      if (item.href === ROUTES.PERFORMANCE_RECORDS) {
+        return performanceFeatureAccess.canViewRecords(user.role);
+      }
+      if (item.href === ROUTES.PERFORMANCE_DISPUTES) {
+        return performanceFeatureAccess.canViewDisputes(user.role);
+      }
+    }
+    
+    // Check if user has the required permission for other items
     if (!user?.role) {
       return false;
     }
