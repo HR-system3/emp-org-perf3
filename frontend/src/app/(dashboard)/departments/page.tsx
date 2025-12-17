@@ -28,14 +28,19 @@ export default function DepartmentsPage() {
       setIsLoading(true);
       setError('');
       const data = await departmentsService.getAllDepartments();
-      
-      // Filter for Department Head/Employee - only show their department
       const normalizedRole = (user?.role || '').toLowerCase().replace(/_/g, ' ').trim();
       const isDepartmentHead = normalizedRole === 'department head';
       const isDepartmentEmployee = normalizedRole === 'department employee';
-      
-      if ((isDepartmentHead || isDepartmentEmployee) && user?.departmentId) {
-        setDepartments(data.filter((dept) => dept.id === user.departmentId));
+
+      if (isDepartmentHead || isDepartmentEmployee) {
+        // For scoped roles, fetch their profile to get departmentId and filter.
+        const profile = await api.get('/employee-profile/me/self').then((r) => r.data);
+        const myDeptId =
+          (profile?.primaryDepartmentId && typeof profile.primaryDepartmentId === 'object'
+            ? profile.primaryDepartmentId._id || profile.primaryDepartmentId.id || profile.primaryDepartmentId
+            : profile?.primaryDepartmentId) || '';
+        const scoped = myDeptId ? data.filter((dept) => dept.id === myDeptId) : [];
+        setDepartments(scoped);
       } else {
         setDepartments(data);
       }

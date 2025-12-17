@@ -70,6 +70,36 @@ export class OrganizationStructureService {
     return Types.ObjectId.isValid(trimmed) ? trimmed : null;
   }
 
+  /**
+   * Map PositionDocuments into HierarchyNode-like objects expected by the frontend.
+   */
+  private mapPositionsToHierarchyNodes(positions: PositionDocument[]) {
+    const nodes = positions.map((pos) => ({
+      id: pos._id.toString(),
+      name: pos.title, // no employee assigned; use position title
+      email: '',
+      positionId: pos.positionId,
+      positionTitle: pos.title,
+      departmentId: pos.departmentId?.toString?.() || '',
+      departmentName: pos.departmentId?.toString?.() || '',
+      managerId: pos.reportsToPositionId?.toString(),
+      children: [] as any[],
+    }));
+
+    // Build tree by managerId
+    const byId = new Map<string, any>();
+    nodes.forEach((n) => byId.set(n.id, n));
+    const roots: any[] = [];
+    nodes.forEach((n) => {
+      if (n.managerId && byId.has(n.managerId)) {
+        byId.get(n.managerId).children.push(n);
+      } else {
+        roots.push(n);
+      }
+    });
+    return roots;
+  }
+
   // ==================== Audit Logging (BR-22) ====================
   // ==================== Audit Logging (BR-22) ====================
 private async createAuditLog(
@@ -403,8 +433,15 @@ private async createAuditLog(
     return saved;
   }
 
-  async getAllPositions(): Promise<PositionDocument[]> {
-    return this.positionModel.find().exec();
+  async getAllPositions(departmentId?: string): Promise<PositionDocument[]> {
+    const filter: any = {};
+    if (departmentId) {
+      const valid = this.normalizeObjectId(departmentId);
+      if (valid) {
+        filter.departmentId = valid;
+      }
+    }
+    return this.positionModel.find(filter).exec();
   }
 
   async getPositionById(id: string): Promise<PositionDocument> {
@@ -762,11 +799,26 @@ await this.createAuditLog(
   // ==================== Hierarchy Methods ====================
 
   async getHierarchy(managerId?: string) {
+    // Return hierarchy in the structure expected by frontend HierarchyNode
     const positions = await this.positionModel.find({ isActive: true }).exec();
     if (managerId) {
-      return HierarchyBuilder.getSubtree(positions, managerId);
+      const subtree = HierarchyBuilder.getSubtree(positions, managerId);
+      if (!subtree) return [];
+      // map subtree (which uses subordinates) into children nodes
+      const flattenSubtree = (node: any): any => ({
+        id: node._id.toString(),
+        name: node.title,
+        email: '',
+        positionId: node.positionId,
+        positionTitle: node.title,
+        departmentId: node.departmentId?.toString?.() || '',
+        departmentName: node.departmentId?.toString?.() || '',
+        managerId: node.reportsToPositionId?.toString(),
+        children: (node.subordinates || []).map((c: any) => flattenSubtree(c)),
+      });
+      return [flattenSubtree(subtree)];
     }
-    return HierarchyBuilder.buildFullHierarchy(positions);
+    return this.mapPositionsToHierarchyNodes(positions);
   }
 
   async getSubtree(managerId: string) {

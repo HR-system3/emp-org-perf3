@@ -20,12 +20,13 @@ export default function UsersPage() {
   const [filterActive, setFilterActive] = useState<string>('');
 
   useEffect(() => {
-    // Check if user is System Admin
+    // Allow System Admin and HR Manager to view/assign roles
     const normalizedRole = (user?.role || '').toLowerCase().replace(/_/g, ' ').trim();
     const isSystemAdmin = normalizedRole === 'system admin';
+    const isHrManager = normalizedRole === 'hr manager';
     
-    if (!isSystemAdmin) {
-      setError('You do not have permission to view users. Only System Admins can access this page.');
+    if (!isSystemAdmin && !isHrManager) {
+      setError('You do not have permission to view users. Only System Admins or HR Managers can access this page.');
       setIsLoading(false);
       return;
     }
@@ -80,11 +81,12 @@ export default function UsersPage() {
 
   const normalizedRole = (user?.role || '').toLowerCase().replace(/_/g, ' ').trim();
   const isSystemAdmin = normalizedRole === 'system admin';
+  const isHrManager = normalizedRole === 'hr manager';
 
-  if (!isSystemAdmin) {
+  if (!isSystemAdmin && !isHrManager) {
     return (
       <div className="max-w-7xl mx-auto">
-        <ErrorMessage message="You do not have permission to view users. Only System Admins can access this page." />
+        <ErrorMessage message="You do not have permission to view users. Only System Admins or HR Managers can access this page." />
       </div>
     );
   }
@@ -96,9 +98,11 @@ export default function UsersPage() {
           <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
           <p className="text-gray-600 mt-2">Manage system users and their roles</p>
         </div>
-        <Button onClick={() => router.push('/users/create')}>
-          + Create User
-        </Button>
+        {isSystemAdmin && (
+          <Button onClick={() => router.push('/users/create')}>
+            + Create User
+          </Button>
+        )}
       </div>
 
       {error && (
@@ -180,24 +184,28 @@ export default function UsersPage() {
                           size="sm"
                           onClick={() => router.push(`/users/${u._id}`)}
                         >
-                          Edit
+                          View / Edit
                         </Button>
-                        {u.isActive ? (
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => handleDeactivate(u._id)}
-                          >
-                            Deactivate
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => handleActivate(u._id)}
-                          >
-                            Activate
-                          </Button>
+                        {isSystemAdmin && (
+                          <>
+                            {u.isActive ? (
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={() => handleDeactivate(u._id)}
+                              >
+                                Deactivate
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => handleActivate(u._id)}
+                              >
+                                Activate
+                              </Button>
+                            )}
+                          </>
                         )}
                       </div>
                     </td>

@@ -10,6 +10,8 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Req,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -32,6 +34,14 @@ import { AuthGuard } from '../auth/guards/authentication.guard';
 import { authorizationGaurd } from '../auth/guards/authorization.gaurd';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../auth/enums/roles.enum';
+import type { Request } from 'express';
+import { InjectModel } from '@nestjs/mongoose';
+import {
+  EmployeeProfile,
+  EmployeeProfileDocument,
+} from '../employee-profile/models/employee-profile.schema';
+import { Model } from 'mongoose';
+import { User, UserDocument } from '../users/models/user.schema';
 
 @ApiTags('Organization Structure')
 @Controller('organization-structure')
@@ -39,7 +49,25 @@ import { Role } from '../auth/enums/roles.enum';
 export class OrganizationStructureController {
   constructor(
     private readonly organizationStructureService: OrganizationStructureService,
+    @InjectModel(EmployeeProfile.name)
+    private readonly employeeProfileModel: Model<EmployeeProfileDocument>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
   ) {}
+
+  private async getDepartmentIdForUser(req: Request): Promise<string | null> {
+    const payload = (req as any).user;
+    if (!payload?.userid) return null;
+    const user = await this.userModel.findById(payload.userid).lean().exec();
+    if (!user?.email) return null;
+    const profile = await this.employeeProfileModel
+      .findOne({ personalEmail: user.email })
+      .select('primaryDepartmentId')
+      .lean()
+      .exec();
+    const deptId = profile?.primaryDepartmentId;
+    return deptId ? deptId.toString() : null;
+  }
 
   // ==================== Department Endpoints ====================
 
@@ -64,7 +92,26 @@ export class OrganizationStructureController {
     description: 'Retrieves a list of all departments',
   })
   @ApiResponse({ status: 200, description: 'List of departments' })
-  async getAllDepartments() {
+  async getAllDepartments(@Req() req: Request) {
+    const role = ((req as any).user?.role || '').toLowerCase();
+    const isDeptScoped =
+      role === Role.DEPARTMENT_HEAD.toLowerCase() ||
+      role === Role.DEPARTMENT_EMPLOYEE.toLowerCase();
+
+    if (isDeptScoped) {
+      const deptId = await this.getDepartmentIdForUser(req);
+      console.log('[DeptHead][Departments][all]', {
+        userid: (req as any).user?.userid,
+        role: (req as any).user?.role,
+        resolvedDeptId: deptId,
+      });
+      if (!deptId) {
+        throw new ForbiddenException('No department assigned to your profile');
+      }
+      const depts = await this.organizationStructureService.getAllDepartments();
+      return depts.filter((d) => d._id.toString() === deptId);
+    }
+
     return this.organizationStructureService.getAllDepartments();
   }
 
@@ -77,7 +124,28 @@ export class OrganizationStructureController {
   @ApiParam({ name: 'id', description: 'Department ID' })
   @ApiResponse({ status: 200, description: 'Department found' })
   @ApiResponse({ status: 404, description: 'Department not found' })
-  async getDepartmentById(@Param('id') id: string) {
+  async getDepartmentById(@Param('id') id: string, @Req() req: Request) {
+    const role = ((req as any).user?.role || '').toLowerCase();
+    const isDeptScoped =
+      role === Role.DEPARTMENT_HEAD.toLowerCase() ||
+      role === Role.DEPARTMENT_EMPLOYEE.toLowerCase();
+
+    if (isDeptScoped) {
+      const deptId = await this.getDepartmentIdForUser(req);
+      console.log('[DeptHead][Departments][byId]', {
+        userid: (req as any).user?.userid,
+        role: (req as any).user?.role,
+        resolvedDeptId: deptId,
+        requestedId: id,
+      });
+      if (!deptId) {
+        throw new ForbiddenException('No department assigned to your profile');
+      }
+      if (deptId !== id) {
+        throw new ForbiddenException('You are not allowed to view other departments');
+      }
+    }
+
     return this.organizationStructureService.getDepartmentById(id);
   }
 
@@ -121,8 +189,27 @@ export class OrganizationStructureController {
     description: 'Retrieves a list of all positions',
   })
   @ApiResponse({ status: 200, description: 'List of positions' })
-  async getAllPositions() {
-    return this.organizationStructureService.getAllPositions();
+  async getAllPositions(@Req() req: Request, @Query('departmentId') departmentId?: string) {
+    const role = ((req as any).user?.role || '').toLowerCase();
+    const isDeptScoped =
+      role === Role.DEPARTMENT_HEAD.toLowerCase() ||
+      role === Role.DEPARTMENT_EMPLOYEE.toLowerCase();
+
+    if (isDeptScoped) {
+      const deptId = await this.getDepartmentIdForUser(req);
+      console.log('[DeptHead][Positions][all]', {
+        userid: (req as any).user?.userid,
+        role: (req as any).user?.role,
+        resolvedDeptId: deptId,
+        requestedDeptId: departmentId,
+      });
+      if (!deptId) {
+        throw new ForbiddenException('No department assigned to your profile');
+      }
+      return this.organizationStructureService.getAllPositions(deptId);
+    }
+
+    return this.organizationStructureService.getAllPositions(departmentId);
   }
 
   @Get('positions/:id')

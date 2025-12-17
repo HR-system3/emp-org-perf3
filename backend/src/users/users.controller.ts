@@ -12,6 +12,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AssignRoleDto } from './dto/assign-role.dto';
+  import { AdminCreateUserDto } from './dto/admin-create-user.dto';
 import { AuthGuard } from '../auth/guards/authentication.guard';
 import { authorizationGaurd } from '../auth/guards/authorization.gaurd';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -23,13 +24,13 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  @Roles(Role.SYSTEM_ADMIN)
+  @Roles(Role.SYSTEM_ADMIN, Role.HR_MANAGER)
   async getAllUsers() {
     return this.usersService.getAll();
   }
 
   @Get(':id')
-  @Roles(Role.SYSTEM_ADMIN)
+  @Roles(Role.SYSTEM_ADMIN, Role.HR_MANAGER)
   async getUserById(@Param('id') id: string) {
     const user = await this.usersService.findById(id);
     if (!user) {
@@ -40,10 +41,18 @@ export class UsersController {
   }
 
   @Post()
-  @Roles(Role.SYSTEM_ADMIN)
+  @Roles(Role.SYSTEM_ADMIN) // create user is System Admin only
   async createUser(@Body() dto: CreateUserDto) {
     // Password is already excluded by the service
     return this.usersService.createUser(dto);
+  }
+
+  // Admin-only auth user creation (no employee profile)
+  @Post('admin-create')
+  @Roles(Role.SYSTEM_ADMIN)
+  async adminCreateUser(@Body() dto: AdminCreateUserDto) {
+    const user = await this.usersService.createUser(dto);
+    return user;
   }
 
   @Patch(':id')
@@ -53,7 +62,7 @@ export class UsersController {
   }
 
   @Patch(':id/assign-role')
-  @Roles(Role.SYSTEM_ADMIN)
+  @Roles(Role.SYSTEM_ADMIN, Role.HR_MANAGER)
   async assignRole(@Param('id') id: string, @Body() dto: AssignRoleDto) {
     return this.usersService.assignRole(id, dto);
   }

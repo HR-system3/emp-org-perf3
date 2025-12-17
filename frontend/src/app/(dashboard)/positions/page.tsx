@@ -27,16 +27,20 @@ export default function PositionsPage() {
     try {
       setIsLoading(true);
       setError('');
-      const data = await positionsService.getAllPositions();
-      
-      // Filter for Department Head/Employee - only show positions in their department
       const normalizedRole = (user?.role || '').toLowerCase().replace(/_/g, ' ').trim();
       const isDepartmentHead = normalizedRole === 'department head';
       const isDepartmentEmployee = normalizedRole === 'department employee';
-      
-      if ((isDepartmentHead || isDepartmentEmployee) && user?.departmentId) {
-        setPositions(data.filter((pos) => pos.departmentId === user.departmentId));
+
+      if (isDepartmentHead || isDepartmentEmployee) {
+        const profile = await api.get('/employee-profile/me/self').then((r) => r.data);
+        const myDeptId =
+          (profile?.primaryDepartmentId && typeof profile.primaryDepartmentId === 'object'
+            ? profile.primaryDepartmentId._id || profile.primaryDepartmentId.id || profile.primaryDepartmentId
+            : profile?.primaryDepartmentId) || '';
+        const data = await positionsService.getAllPositions(myDeptId || undefined);
+        setPositions(data);
       } else {
+        const data = await positionsService.getAllPositions();
         setPositions(data);
       }
     } catch (err: any) {

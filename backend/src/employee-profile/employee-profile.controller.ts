@@ -50,8 +50,14 @@ import {
       Role.DEPARTMENT_EMPLOYEE,
       Role.SYSTEM_ADMIN,
     )
-    async listEmployees(@Query('departmentId') departmentId?: string) {
-      return this.employeeProfileService.listEmployees(departmentId);
+  async listEmployees(@Query('departmentId') departmentId?: string, @Req() req?: Request) {
+    const role = (req as any)?.user?.role;
+    console.log('[DeptHead][Employees][all]', {
+      userid: (req as any)?.user?.userid,
+      role,
+      requestedDeptId: departmentId,
+    });
+    return this.employeeProfileService.listEmployees(departmentId);
     }
 
     @Post()
@@ -153,10 +159,16 @@ import {
         const profile = await this.employeeProfileService.getByEmail(userEmail);
         
         if (!profile) {
-          console.warn('[getMySelfProfile] Profile not found');
-          throw new NotFoundException(
-            `Employee profile not found for user email: ${userEmail}. Please ensure your employee profile exists and has the same email address.`
-          );
+          console.warn('[getMySelfProfile] Profile not found, returning fallback user info');
+          // Return a minimal fallback so the frontend can still render basic info
+          return {
+            _id: userId,
+            firstName: user?.name || 'User',
+            lastName: '',
+            personalEmail: userEmail,
+            status: 'INACTIVE',
+            message: 'Employee profile not found. Please create/align an employee profile for this user.',
+          };
         }
         
         console.log('[getMySelfProfile] Profile found, ID:', (profile as any)._id);
@@ -197,6 +209,28 @@ import {
     @Roles(Role.DEPARTMENT_EMPLOYEE, Role.DEPARTMENT_HEAD, Role.HR_ADMIN, Role.HR_MANAGER, Role.HR_EMPLOYEE, Role.SYSTEM_ADMIN)
     getSelfProfile(@Param('id') id: string) {
       return this.employeeProfileService.getSelfProfile(id);
+    }
+
+    @Get('me/reports')
+    @Roles(Role.DEPARTMENT_HEAD, Role.HR_MANAGER, Role.HR_ADMIN, Role.SYSTEM_ADMIN)
+    async getMyReports(@Req() req: Request) {
+      const userPayload = (req as any).user;
+      if (!userPayload?.userid) {
+        throw new NotFoundException('User authentication information not found');
+      }
+      const userId = userPayload.userid;
+      const user = await this.usersService.findById(userId);
+      if (!user?.email) {
+        throw new NotFoundException('User email not found');
+      }
+
+      const profile = await this.employeeProfileService.getByEmail((user as any).email);
+      const profileId = (profile as any)?._id;
+      if (!profileId) {
+        throw new NotFoundException('Employee profile not found for your account');
+      }
+
+      return this.employeeProfileService.getReportsForHead(profileId.toString());
     }
   
     @Patch('me/self')

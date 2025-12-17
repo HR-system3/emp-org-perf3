@@ -17,6 +17,11 @@ export const usersService = {
     return response.data;
   },
 
+  async createUserAdmin(dto: CreateUserDTO): Promise<User> {
+    const response = await api.post<User>('/users/admin-create', dto);
+    return response.data;
+  },
+
   async updateUser(id: string, dto: UpdateUserDTO): Promise<User> {
     const response = await api.patch<User>(`/users/${id}`, dto);
     return response.data;

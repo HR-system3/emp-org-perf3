@@ -34,19 +34,25 @@ export default function MyTeamPage() {
     try {
       setIsLoading(true);
       setError('');
-      
-      // First, get the current user's employee profile to get the employee profile ID
-      const myProfileRes = await api.get<EmployeeProfile>('/employee-profile/me/self');
-      const myEmployeeId = myProfileRes.data._id;
-      
-      if (!myEmployeeId) {
-        setError('Unable to find your employee profile. Please ensure your profile exists.');
-        return;
-      }
 
-      // Use reporting structure endpoint - finds employees whose positions report to manager's position
-      const data = await employeesService.getTeamByReportingStructure(myEmployeeId);
-      setTeamMembers(data);
+      const normalizedRole = (user?.role || '').toLowerCase().replace(/_/g, ' ').trim();
+      const isDepartmentHead = normalizedRole === 'department head';
+
+      // For Department Head, use new backend endpoint that derives reports from token
+      if (isDepartmentHead) {
+        const data = await employeesService.getMyReports();
+        setTeamMembers(data);
+      } else {
+        // Fallback to existing reporting-structure logic
+        const myProfileRes = await api.get<EmployeeProfile>('/employee-profile/me/self');
+        const myEmployeeId = myProfileRes.data._id;
+        if (!myEmployeeId) {
+          setError('Unable to find your employee profile. Please ensure your profile exists.');
+          return;
+        }
+        const data = await employeesService.getTeamByReportingStructure(myEmployeeId);
+        setTeamMembers(data);
+      }
     } catch (err: any) {
       setError(
         err.response?.data?.message ||

@@ -25,4 +25,9 @@ export const employeesService = {
     );
     return response.data;
   },
+
+  async getMyReports(): Promise<EmployeeProfile[]> {
+    const response = await api.get<EmployeeProfile[]>('/employee-profile/me/reports');
+    return response.data;
+  },
 };

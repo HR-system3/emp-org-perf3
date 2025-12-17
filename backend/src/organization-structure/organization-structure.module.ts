@@ -21,6 +21,11 @@ import {
   StructureChangeRequestSchema,
 } from './models/structure-change-request.schema';
 import { PayrollStub, EmployeeProfileStub } from './utils/integration-stubs';
+import {
+  EmployeeProfile,
+  EmployeeProfileSchema,
+} from '../employee-profile/models/employee-profile.schema';
+import { User, UserSchema } from '../users/models/user.schema';
 
 @Module({
   imports: [
@@ -34,6 +39,8 @@ import { PayrollStub, EmployeeProfileStub } from './utils/integration-stubs';
         name: StructureChangeRequest.name,
         schema: StructureChangeRequestSchema,
       },
+      { name: EmployeeProfile.name, schema: EmployeeProfileSchema },
+      { name: User.name, schema: UserSchema },
     ]),
   ],
   controllers: [OrganizationStructureController],

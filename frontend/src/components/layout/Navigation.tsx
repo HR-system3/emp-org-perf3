@@ -53,6 +53,11 @@ const allNavItems: NavItemType[] = [
   { section: 'Personal' },
   { name: 'My Team', href: ROUTES.MY_TEAM, icon: '👥', permission: 'canViewManagerTeam' },
   { name: 'Profile', href: ROUTES.PROFILE, icon: '👤' },
+
+  // System Admin
+  { section: 'System Administration' },
+  { name: 'Create Auth User', href: '/system-admin/users/create', icon: '🛠️', permission: 'canAssignRoles' },
+  { name: 'User Management', href: '/users', icon: '👥', permission: 'canAssignRoles' },
 ];
 
 export default function Navigation() {

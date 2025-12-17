@@ -43,13 +43,14 @@ export default function EditUserPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
 
+  const normalizedRole = (currentUser?.role || '').toLowerCase().replace(/_/g, ' ').trim();
+  const isSystemAdmin = normalizedRole === 'system admin';
+  const isHrManager = normalizedRole === 'hr manager';
+
   useEffect(() => {
-    // Check if user is System Admin
-    const normalizedRole = (currentUser?.role || '').toLowerCase().replace(/_/g, ' ').trim();
-    const isSystemAdmin = normalizedRole === 'system admin';
-    
-    if (!isSystemAdmin) {
-      setError('You do not have permission to edit users. Only System Admins can access this page.');
+    // Allow System Admin and HR Manager (HR Manager can assign roles only)
+    if (!isSystemAdmin && !isHrManager) {
+      setError('You do not have permission to edit users. Only System Admins or HR Managers can access this page.');
       setIsLoading(false);
       return;
     }
@@ -57,7 +58,7 @@ export default function EditUserPage() {
     if (id) {
       fetchUser();
     }
-  }, [id, currentUser]);
+  }, [id, isSystemAdmin, isHrManager]);
 
   const fetchUser = async () => {
     try {
@@ -80,6 +81,10 @@ export default function EditUserPage() {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!isSystemAdmin) {
+      setError('Only System Admins can update user details. HR Managers can assign roles only.');
+      return;
+    }
     if (!formData.name || !formData.email) {
       setError('Please fill in all required fields');
       return;
@@ -155,6 +160,10 @@ export default function EditUserPage() {
   };
 
   const handleActivate = async () => {
+    if (!isSystemAdmin) {
+      setError('Only System Admins can activate users.');
+      return;
+    }
     try {
       setIsSaving(true);
       setError('');
@@ -168,6 +177,10 @@ export default function EditUserPage() {
   };
 
   const handleDeactivate = async () => {
+    if (!isSystemAdmin) {
+      setError('Only System Admins can deactivate users.');
+      return;
+    }
     if (!confirm('Are you sure you want to deactivate this user?')) {
       return;
     }
@@ -187,13 +200,10 @@ export default function EditUserPage() {
     return <Loading size="lg" text="Loading user..." />;
   }
 
-  const normalizedRole = (currentUser?.role || '').toLowerCase().replace(/_/g, ' ').trim();
-  const isSystemAdmin = normalizedRole === 'system admin';
-
-  if (!isSystemAdmin) {
+  if (!isSystemAdmin && !isHrManager) {
     return (
       <div className="max-w-4xl mx-auto">
-        <ErrorMessage message="You do not have permission to edit users. Only System Admins can access this page." />
+        <ErrorMessage message="You do not have permission to edit users. Only System Admins or HR Managers can access this page." />
         <Button onClick={() => router.back()} className="mt-4">
           Go Back
         </Button>
@@ -271,6 +281,7 @@ export default function EditUserPage() {
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               required
+              disabled={!isSystemAdmin}
             />
           </div>
 
@@ -284,6 +295,7 @@ export default function EditUserPage() {
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               required
+              disabled={!isSystemAdmin}
             />
           </div>
 
@@ -297,6 +309,7 @@ export default function EditUserPage() {
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               minLength={6}
+              disabled={!isSystemAdmin}
             />
             <p className="text-xs text-gray-500 mt-1">Minimum 6 characters (only if changing password)</p>
           </div>
@@ -318,10 +331,12 @@ export default function EditUserPage() {
             </select>
           </div>
 
-          <div className="flex gap-3 pt-4">
-            <Button type="submit" isLoading={isSaving} disabled={isSaving}>
-              Update User
-            </Button>
+          <div className="flex gap-3 pt-4 flex-wrap">
+            {isSystemAdmin && (
+              <Button type="submit" isLoading={isSaving} disabled={isSaving}>
+                Update User
+              </Button>
+            )}
             <Button
               type="button"
               variant="secondary"
@@ -331,26 +346,28 @@ export default function EditUserPage() {
             >
               Assign Role Only
             </Button>
-            {user.isActive ? (
-              <Button
-                type="button"
-                variant="danger"
-                onClick={handleDeactivate}
-                isLoading={isSaving}
-                disabled={isSaving}
-              >
-                Deactivate
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                variant="primary"
-                onClick={handleActivate}
-                isLoading={isSaving}
-                disabled={isSaving}
-              >
-                Activate
-              </Button>
+            {isSystemAdmin && (
+              user.isActive ? (
+                <Button
+                  type="button"
+                  variant="danger"
+                  onClick={handleDeactivate}
+                  isLoading={isSaving}
+                  disabled={isSaving}
+                >
+                  Deactivate
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={handleActivate}
+                  isLoading={isSaving}
+                  disabled={isSaving}
+                >
+                  Activate
+                </Button>
+              )
             )}
             <Button type="button" variant="outline" onClick={() => router.back()}>
               Cancel
