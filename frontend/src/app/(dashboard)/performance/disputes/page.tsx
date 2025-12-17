@@ -10,9 +10,12 @@ import Loading from '@/components/common/Loading';
 import ErrorMessage from '@/components/common/ErrorMessage';
 import PerformanceStatusBadge from '@/components/performance/StatusBadge';
 import { formatDate } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { isEmployee, isManager, isHRAdmin } from '@/lib/performanceRoles';
 
 export default function DisputesPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [disputes, setDisputes] = useState<AppraisalDispute[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +35,15 @@ export default function DisputesPage() {
       const params: any = {};
       if (filters.status) params.status = filters.status as AppraisalDisputeStatus;
       if (filters.cycleId) params.cycleId = filters.cycleId;
+      
+      // Employees: Only see their own disputes
+      if (isEmployee(user?.role) && user?.id) {
+        params.employeeProfileId = user.id;
+      }
+      
+      // Managers: See disputes for their team (backend will filter)
+      // HR Admin: See all disputes
+      
       const data = await performanceService.getDisputes(params);
       setDisputes(data);
     } catch (err: any) {
@@ -50,11 +62,20 @@ export default function DisputesPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Appraisal Disputes</h1>
-          <p className="text-gray-600 mt-1">Manage performance appraisal disputes</p>
+          <p className="text-gray-600 mt-1">
+            {isEmployee(user?.role)
+              ? 'View and create disputes for your performance records'
+              : isManager(user?.role)
+              ? 'Resolve disputes for your team members'
+              : 'Manage performance appraisal disputes'}
+          </p>
         </div>
-        <Button onClick={() => router.push('/performance/disputes/new')}>
-          Create Dispute
-        </Button>
+        {/* Only Employees can create disputes */}
+        {isEmployee(user?.role) && (
+          <Button onClick={() => router.push('/performance/disputes/new')}>
+            Create Dispute
+          </Button>
+        )}
       </div>
 
       {error && (

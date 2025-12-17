@@ -12,6 +12,7 @@ import PerformanceStatusBadge from '@/components/performance/StatusBadge';
 import { formatDate } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { hasPermission } from '@/lib/rolePermissions';
+import { isHRAdmin, isManager } from '@/lib/performanceRoles';
 
 export default function CyclesPage() {
   const { user } = useAuth();
@@ -47,9 +48,14 @@ export default function CyclesPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Appraisal Cycles</h1>
-          <p className="text-gray-600 mt-1">Manage performance appraisal cycles</p>
+          <p className="text-gray-600 mt-1">
+            {isManager(user?.role) 
+              ? 'View performance appraisal cycles and track progress'
+              : 'Manage performance appraisal cycles'}
+          </p>
         </div>
-        {hasPermission(user?.role || '', 'canCreateCycles') && (
+        {/* Only HR Admin can create cycles */}
+        {isHRAdmin(user?.role) && (
           <Button onClick={() => router.push('/performance/cycles/new')}>
             Create Cycle
           </Button>
@@ -122,26 +128,32 @@ export default function CyclesPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      router.push(`/performance/cycles/${cycle._id}/progress`);
-                    }}
-                  >
-                    Progress
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      router.push(`/performance/cycles/${cycle._id}/edit`);
-                    }}
-                  >
-                    Edit
-                  </Button>
+                  {/* Managers and HR Admin can view progress */}
+                  {(isManager(user?.role) || isHRAdmin(user?.role)) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/performance/cycles/${cycle._id}/progress`);
+                      }}
+                    >
+                      Progress
+                    </Button>
+                  )}
+                  {/* Only HR Admin can edit cycles */}
+                  {isHRAdmin(user?.role) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/performance/cycles/${cycle._id}/edit`);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>
