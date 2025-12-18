@@ -42,6 +42,7 @@ import {
   ChangeLogAction,
   PositionStatus,
 } from './enums/organization-structure.enums';
+import { OrganizationNotificationService } from './notifications/organization-notification.service';
 
 @Injectable()
 export class OrganizationStructureService {
@@ -58,6 +59,7 @@ export class OrganizationStructureService {
     private changeLogModel: Model<StructureChangeLogDocument>,
     private payrollStub: PayrollStub,
     private employeeProfileStub: EmployeeProfileStub,
+    private notificationService: OrganizationNotificationService,
   ) {}
 
   /**
@@ -260,6 +262,11 @@ private async createAuditLog(
       `Department ${dto.deptId} created`,
     );
 
+    // REQ-OSM-11: Notify stakeholders
+    await this.notificationService.notifyDepartmentCreated(saved._id, saved.name).catch((err) => {
+      console.error('Failed to send department creation notification:', err);
+    });
+
     return saved;
   }
 
@@ -285,21 +292,37 @@ private async createAuditLog(
     dto: UpdateDepartmentDto,
     requestedBy?: string,
   ): Promise<DepartmentDocument> {
-    // BR-36: All updates must go through change request workflow
-    // For now, we'll allow direct updates but log them
-    // In production, this should create a change request instead
+    // BR-36: Direct updates restricted to SYSTEM_ADMIN only for emergency updates
+    // All other users must use change request workflow (enforced in controller)
 
     const department = await this.getDepartmentById(id);
     const beforeSnapshot = department.toObject();
 
-    if (dto.code) department.code = dto.code;
-    if (dto.name) department.name = dto.name;
-    if (dto.description !== undefined) department.description = dto.description;
+    const changes: Record<string, any> = {};
+    if (dto.code) {
+      department.code = dto.code;
+      changes.code = dto.code;
+    }
+    if (dto.name) {
+      department.name = dto.name;
+      changes.name = dto.name;
+    }
+    if (dto.description !== undefined) {
+      department.description = dto.description;
+      changes.description = dto.description;
+    }
     if (dto.headPositionId) {
       department.headPositionId = new Types.ObjectId(dto.headPositionId);
+      changes.headPositionId = dto.headPositionId;
     }
-    if (dto.costCenter) department.costCenter = dto.costCenter;
-    if (dto.isActive !== undefined) department.isActive = dto.isActive;
+    if (dto.costCenter) {
+      department.costCenter = dto.costCenter;
+      changes.costCenter = dto.costCenter;
+    }
+    if (dto.isActive !== undefined) {
+      department.isActive = dto.isActive;
+      changes.isActive = dto.isActive;
+    }
 
     const saved = await department.save();
 
@@ -313,6 +336,11 @@ private async createAuditLog(
       saved.toObject() as unknown as Record<string, unknown>,
       `Department ${department.deptId} updated`,
     );
+
+    // REQ-OSM-11: Notify stakeholders
+    await this.notificationService.notifyDepartmentUpdated(saved._id, saved.name, changes).catch((err) => {
+      console.error('Failed to send department update notification:', err);
+    });
 
     return saved;
   }
@@ -430,6 +458,11 @@ private async createAuditLog(
       `Position ${dto.positionId} created`,
     );
 
+    // REQ-OSM-11: Notify stakeholders
+    await this.notificationService.notifyPositionCreated(saved._id, saved.title).catch((err) => {
+      console.error('Failed to send position creation notification:', err);
+    });
+
     return saved;
   }
 
@@ -462,12 +495,12 @@ private async createAuditLog(
     dto: UpdatePositionDto,
     requestedBy?: string,
   ): Promise<PositionDocument> {
-    // BR-36: All updates must go through change request workflow
-    // For now, we'll allow direct updates but log them
-    // In production, this should create a change request instead
+    // BR-36: Direct updates restricted to SYSTEM_ADMIN only for emergency updates
+    // All other users must use change request workflow (enforced in controller)
 
     const position = await this.getPositionById(id);
     const beforeSnapshot = position.toObject();
+    const oldReportsTo = position.reportsToPositionId?.toString();
 
     // REQ-OSM-09: Validate reporting line if reportsToPositionId is being updated
     if (dto.reportsToPositionId !== undefined) {
@@ -516,6 +549,10 @@ private async createAuditLog(
       }
       position.payGradeId = new Types.ObjectId(dto.payGradeId);
     }
+    const newReportsTo = dto.reportsToPositionId !== undefined
+      ? (dto.reportsToPositionId ? dto.reportsToPositionId : null)
+      : null;
+    
     if (dto.reportsToPositionId !== undefined) {
       position.reportsToPositionId = dto.reportsToPositionId
         ? new Types.ObjectId(dto.reportsToPositionId)
@@ -537,6 +574,27 @@ private async createAuditLog(
       saved.toObject() as unknown as Record<string, unknown>,
       `Position ${position.positionId} updated`,
     );
+
+    // REQ-OSM-11: Notify stakeholders
+    const changes: Record<string, any> = {};
+    if (dto.title) changes.title = dto.title;
+    if (dto.jobKey) changes.jobKey = dto.jobKey;
+    if (dto.status) changes.status = dto.status;
+    
+    await this.notificationService.notifyPositionUpdated(saved._id, saved.title, changes).catch((err) => {
+      console.error('Failed to send position update notification:', err);
+    });
+
+    // REQ-OSM-11: Notify if reporting line changed
+    if (newReportsTo !== null && newReportsTo !== oldReportsTo) {
+      await this.notificationService.notifyReportingLineChanged(
+        saved._id,
+        oldReportsTo || null,
+        newReportsTo,
+      ).catch((err) => {
+        console.error('Failed to send reporting line change notification:', err);
+      });
+    }
 
     return saved;
   }
@@ -563,6 +621,11 @@ private async createAuditLog(
       saved.toObject() as unknown as Record<string, unknown>,
       `Position ${position.positionId} deactivated`,
     );
+
+    // REQ-OSM-11: Notify stakeholders
+    await this.notificationService.notifyPositionDeactivated(saved._id, saved.title).catch((err) => {
+      console.error('Failed to send position deactivation notification:', err);
+    });
 
     return saved;
   }
@@ -612,6 +675,11 @@ await this.createAuditLog(
   `Position ${position.positionId} delimited: ${dto.reason}`,
 );
 
+  // REQ-OSM-11: Notify stakeholders
+  await this.notificationService.notifyPositionDelimited(saved._id, saved.title, dto.reason).catch((err) => {
+    console.error('Failed to send position delimiting notification:', err);
+  });
+
   return saved;
 }
 
@@ -652,7 +720,18 @@ await this.createAuditLog(
       submittedAt: new Date(),
     });
 
-    return changeRequest.save();
+    const saved = await changeRequest.save();
+
+    // REQ-OSM-11: Notify stakeholders
+    await this.notificationService.notifyChangeRequestSubmitted(
+      saved._id,
+      saved.requestNumber,
+      requestedByEmployeeId,
+    ).catch((err) => {
+      console.error('Failed to send change request submission notification:', err);
+    });
+
+    return saved;
   }
 
   async getAllChangeRequests(): Promise<StructureChangeRequestDocument[]> {
@@ -687,12 +766,34 @@ await this.createAuditLog(
       await this.applyChangeRequest(request, approverId);
 
       request.status = StructureRequestStatus.APPROVED;
+      const saved = await request.save();
+
+      // REQ-OSM-11: Notify stakeholders of approval
+      await this.notificationService.notifyChangeRequestApproved(
+        saved._id,
+        saved.requestNumber,
+        approverId,
+      ).catch((err) => {
+        console.error('Failed to send change request approval notification:', err);
+      });
+
+      return saved;
     } else if (dto.decision === ApprovalDecision.REJECTED) {
       request.status = StructureRequestStatus.REJECTED;
-    }
+      const saved = await request.save();
 
-    // Update request with approver info
-    // Note: You may want to add approverId and approvedAt fields to the schema
+      // REQ-OSM-11: Notify stakeholders of rejection
+      await this.notificationService.notifyChangeRequestRejected(
+        saved._id,
+        saved.requestNumber,
+        approverId,
+        dto.comments,
+      ).catch((err) => {
+        console.error('Failed to send change request rejection notification:', err);
+      });
+
+      return saved;
+    }
 
     return request.save();
   }
@@ -710,6 +811,7 @@ await this.createAuditLog(
         request.targetPositionId.toString(),
       );
       const beforeSnapshot = position.toObject();
+      const oldReportsTo = position.reportsToPositionId?.toString() || null;
 
       // Apply changes from request
       if (request.reportingTo) {
@@ -765,6 +867,17 @@ await this.createAuditLog(
         position.toObject() as unknown as Record<string, unknown>,
         `Position updated via change request ${request.requestNumber}`,
       );
+
+      // REQ-OSM-11: Notify if reporting line changed
+      if (request.reportingTo && request.reportingTo.toString() !== oldReportsTo) {
+        await this.notificationService.notifyReportingLineChanged(
+          position._id,
+          oldReportsTo || null,
+          request.reportingTo.toString(),
+        ).catch((err) => {
+          console.error('Failed to send reporting line change notification:', err);
+        });
+      }
     } else if (request.requestType === StructureRequestType.UPDATE_DEPARTMENT) {
       if (!request.targetDepartmentId) {
         throw new BadRequestException('Target department ID is required');

@@ -20,9 +20,11 @@ import {
   import { UpdateEmployeeProfileDto } from './dto/update-employee-profile.dto';
   import { SelfServiceUpdateProfileDto } from './dto/self-service-update-profile.dto';
   import { AssignRoleDto } from './dto/assign-role.dto';
+  import { AssignPositionDepartmentDto } from './dto/assign-position-department.dto';
   import { CreateChangeRequestDto } from './dto/create-change-request.dto';
   import { ProcessChangeRequestDto } from './dto/process-change-request.dto';
   import { ProfileChangeStatus } from './enums/employee-profile.enums';
+  import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
   import { AuthGuard } from '../auth/guards/authentication.guard';
   import { authorizationGaurd } from '../auth/guards/authorization.gaurd';
   import { Roles } from '../auth/decorators/roles.decorator';
@@ -101,6 +103,24 @@ import {
       @Body() dto: UpdateEmployeeProfileDto,
     ) {
       return this.employeeProfileService.updateEmployeeProfile(id, dto);
+    }
+
+    @Patch(':id/assign-position-department')
+    @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.SYSTEM_ADMIN)
+    @ApiOperation({
+      summary: 'Assign position and department to employee',
+      description: 'Assigns position, department, and optionally supervisor to an employee profile. Restricted to HR Admin, HR Manager, and System Admin only.',
+    })
+    @ApiParam({ name: 'id', description: 'Employee Profile ID' })
+    @ApiResponse({ status: 200, description: 'Position and department assigned successfully' })
+    @ApiResponse({ status: 403, description: 'Forbidden: Only HR roles can assign positions' })
+    @ApiResponse({ status: 404, description: 'Employee profile, position, or department not found' })
+    @ApiResponse({ status: 400, description: 'Invalid assignment (position not in department, circular reporting, etc.)' })
+    async assignPositionDepartment(
+      @Param('id') id: string,
+      @Body() dto: AssignPositionDepartmentDto,
+    ) {
+      return this.employeeProfileService.assignPositionDepartment(id, dto);
     }
 
     @Patch(':id/deactivate')
@@ -353,7 +373,7 @@ import {
     // ---------------------------------------------------------------------------
   
     @Post(':id/roles')
-    @Roles(Role.SYSTEM_ADMIN, Role.HR_ADMIN)
+    @Roles(Role.SYSTEM_ADMIN, Role.HR_ADMIN, Role.HR_MANAGER)
     assignRoles(
       @Param('id') employeeProfileId: string,
       @Body() dto: AssignRoleDto,

@@ -12,6 +12,7 @@ import {
   UseGuards,
   Req,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -150,19 +151,27 @@ export class OrganizationStructureController {
   }
 
   @Put('departments/:id')
-  @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.SYSTEM_ADMIN)
+  @Roles(Role.SYSTEM_ADMIN)
   @ApiOperation({
     summary: 'Update department',
-    description: 'Updates an existing department (REQ-OSM-02)',
+    description: 'Updates an existing department (REQ-OSM-02). BR-36: Direct updates restricted to SYSTEM_ADMIN only for emergency updates. All other users must use change request workflow.',
   })
   @ApiParam({ name: 'id', description: 'Department ID' })
   @ApiBody({ type: UpdateDepartmentDto })
   @ApiResponse({ status: 200, description: 'Department updated successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Direct updates are restricted. Please use change request workflow.' })
   @ApiResponse({ status: 404, description: 'Department not found' })
   async updateDepartment(
     @Param('id') id: string,
     @Body() dto: UpdateDepartmentDto,
+    @Req() req: Request,
   ) {
+    const role = (req as any).user?.role;
+    if (role !== Role.SYSTEM_ADMIN) {
+      throw new ForbiddenException(
+        'Direct updates are restricted to SYSTEM_ADMIN only. Please use the change request workflow to request updates.',
+      );
+    }
     return this.organizationStructureService.updateDepartment(id, dto);
   }
 
@@ -178,7 +187,14 @@ export class OrganizationStructureController {
   @ApiResponse({ status: 201, description: 'Position created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   @ApiResponse({ status: 409, description: 'Position code already exists' })
-  async createPosition(@Body() dto: CreatePositionDto) {
+  async createPosition(@Body() dto: CreatePositionDto, @Req() req: Request) {
+    // BR-30: Reporting manager required (top-level positions only allowed for SYSTEM_ADMIN)
+    const role = (req as any).user?.role;
+    if (!dto.reportsToPositionId && role !== Role.SYSTEM_ADMIN) {
+      throw new BadRequestException(
+        'Reporting manager (reportsToPositionId) is required. Top-level positions can only be created by SYSTEM_ADMIN.',
+      );
+    }
     return this.organizationStructureService.createPosition(dto);
   }
 
@@ -226,19 +242,27 @@ export class OrganizationStructureController {
   }
 
   @Put('positions/:id')
-  @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.SYSTEM_ADMIN)
+  @Roles(Role.SYSTEM_ADMIN)
   @ApiOperation({
     summary: 'Update position',
-    description: 'Updates an existing position (REQ-OSM-02)',
+    description: 'Updates an existing position (REQ-OSM-02). BR-36: Direct updates restricted to SYSTEM_ADMIN only for emergency updates. All other users must use change request workflow.',
   })
   @ApiParam({ name: 'id', description: 'Position ID' })
   @ApiBody({ type: UpdatePositionDto })
   @ApiResponse({ status: 200, description: 'Position updated successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden: Direct updates are restricted. Please use change request workflow.' })
   @ApiResponse({ status: 404, description: 'Position not found' })
   async updatePosition(
     @Param('id') id: string,
     @Body() dto: UpdatePositionDto,
+    @Req() req: Request,
   ) {
+    const role = (req as any).user?.role;
+    if (role !== Role.SYSTEM_ADMIN) {
+      throw new ForbiddenException(
+        'Direct updates are restricted to SYSTEM_ADMIN only. Please use the change request workflow to request updates.',
+      );
+    }
     return this.organizationStructureService.updatePosition(id, dto);
   }
 
@@ -280,14 +304,40 @@ export class OrganizationStructureController {
   @Roles(Role.HR_ADMIN, Role.HR_MANAGER, Role.HR_EMPLOYEE, Role.SYSTEM_ADMIN, Role.DEPARTMENT_HEAD, Role.DEPARTMENT_EMPLOYEE)
   @ApiOperation({
     summary: 'Get organizational hierarchy',
-    description: 'Gets full organizational hierarchy or subtree for a manager (REQ-SANV-01, REQ-SANV-02)',
+    description: 'Gets full organizational hierarchy or subtree for a manager (REQ-SANV-01, REQ-SANV-02). REQ-SANV-02: DEPARTMENT_HEAD automatically sees only their team subtree.',
   })
   @ApiQuery({ name: 'managerId', required: false, description: 'Manager ID to get subtree for' })
   @ApiResponse({ status: 200, description: 'Hierarchy retrieved successfully' })
-  async getHierarchy(@Query() query: GetHierarchyQueryDto) {
+  async getHierarchy(@Query() query: GetHierarchyQueryDto, @Req() req: Request) {
+    const role = (req as any).user?.role;
+    
+    // REQ-SANV-02: Auto-filter for DEPARTMENT_HEAD role - managers see only their team
+    if (role === Role.DEPARTMENT_HEAD) {
+      const managerPositionId = await this.getManagerPositionId(req);
+      if (managerPositionId) {
+        return this.organizationStructureService.getHierarchy(managerPositionId);
+      }
+    }
+    
     return this.organizationStructureService.getHierarchy(
       query.managerId || query.positionId,
     );
+  }
+
+  private async getManagerPositionId(req: Request): Promise<string | null> {
+    const payload = (req as any).user;
+    if (!payload?.userid) return null;
+    
+    const user = await this.userModel.findById(payload.userid).lean().exec();
+    if (!user?.email) return null;
+    
+    const profile = await this.employeeProfileModel
+      .findOne({ personalEmail: user.email })
+      .select('primaryPositionId')
+      .lean()
+      .exec();
+    
+    return profile?.primaryPositionId ? profile.primaryPositionId.toString() : null;
   }
 
   @Get('hierarchy/subtree/:managerId')
