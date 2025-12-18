@@ -41,7 +41,7 @@ export class UsersController {
   }
 
   @Post()
-  @Roles(Role.SYSTEM_ADMIN) // create user is System Admin only
+  @Roles(Role.SYSTEM_ADMIN, Role.HR_MANAGER) // create user is System Admin and HR Manager
   async createUser(@Body() dto: CreateUserDto) {
     // Password is already excluded by the service
     return this.usersService.createUser(dto);
@@ -49,7 +49,7 @@ export class UsersController {
 
   // Admin-only auth user creation (no employee profile)
   @Post('admin-create')
-  @Roles(Role.SYSTEM_ADMIN)
+  @Roles(Role.SYSTEM_ADMIN, Role.HR_MANAGER)
   async adminCreateUser(@Body() dto: AdminCreateUserDto) {
     const user = await this.usersService.createUser(dto);
     return user;

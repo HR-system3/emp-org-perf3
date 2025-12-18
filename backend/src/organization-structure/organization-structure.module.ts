@@ -25,7 +25,16 @@ import {
   EmployeeProfile,
   EmployeeProfileSchema,
 } from '../employee-profile/models/employee-profile.schema';
+import {
+  EmployeeSystemRole,
+  EmployeeSystemRoleSchema,
+} from '../employee-profile/models/employee-system-role.schema';
 import { User, UserSchema } from '../users/models/user.schema';
+import { OrganizationNotificationService } from './notifications/organization-notification.service';
+import {
+  InAppNotification,
+  InAppNotificationSchema,
+} from './models/in-app-notification.schema';
 
 @Module({
   imports: [
@@ -40,11 +49,13 @@ import { User, UserSchema } from '../users/models/user.schema';
         schema: StructureChangeRequestSchema,
       },
       { name: EmployeeProfile.name, schema: EmployeeProfileSchema },
+      { name: EmployeeSystemRole.name, schema: EmployeeSystemRoleSchema },
       { name: User.name, schema: UserSchema },
+      { name: InAppNotification.name, schema: InAppNotificationSchema },
     ]),
   ],
   controllers: [OrganizationStructureController],
-  providers: [OrganizationStructureService, PayrollStub, EmployeeProfileStub],
+  providers: [OrganizationStructureService, OrganizationNotificationService, PayrollStub, EmployeeProfileStub],
   exports: [OrganizationStructureService],
 })
 export class OrganizationStructureModule {}

@@ -22,6 +22,7 @@ import {
 } from './models/qualification.schema';
 import { UsersModule } from '../users/users.module';
 import { Position, PositionSchema } from '../organization-structure/models/position.schema';
+import { Department, DepartmentSchema } from '../organization-structure/models/department.schema';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { Position, PositionSchema } from '../organization-structure/models/posit
       },
       { name: EmployeeQualification.name, schema: EmployeeQualificationSchema },
       { name: Position.name, schema: PositionSchema },
+      { name: Department.name, schema: DepartmentSchema },
     ]),
     UsersModule,
   ],
