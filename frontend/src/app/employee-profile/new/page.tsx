@@ -12,9 +12,15 @@ import {
   Gender,
   MaritalStatus,
 } from '@/types/employeeProfile';
+import { Position } from '@/types/position.types';
+import { Department } from '@/types/department.types';
+import { positionsService } from '@/services/api/positions.service';
+import { departmentsService } from '@/services/api/departments.service';
+import { employeesService } from '@/services/api/employees.service';
 import Card from '@/components/common/Card';
 import Button from '@/components/common/Button';
 import ErrorMessage from '@/components/common/ErrorMessage';
+import Loading from '@/components/common/Loading';
 
 const contractTypes: ContractType[] = [
   "FULL_TIME_CONTRACT",
@@ -60,12 +66,60 @@ export default function CreateEmployeePage() {
     status: "ACTIVE",
   });
 
+  // Position and Department assignment (separate from profile creation)
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>('');
+  const [selectedPositionId, setSelectedPositionId] = useState<string>('');
+  const [selectedSupervisorPositionId, setSelectedSupervisorPositionId] = useState<string>('');
+
+  // Reference data
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [filteredPositions, setFilteredPositions] = useState<Position[]>([]);
+  const [loadingRefData, setLoadingRefData] = useState(true);
+
   const [result, setResult] = useState<EmployeeProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // 🔔 toast message
   const [toast, setToast] = useState<string | null>(null);
+
+  // Load reference data (departments and positions)
+  useEffect(() => {
+    const loadReferenceData = async () => {
+      try {
+        setLoadingRefData(true);
+        const [deptsData, positionsData] = await Promise.all([
+          departmentsService.getAllDepartments(),
+          positionsService.getAllPositions(),
+        ]);
+        setDepartments(deptsData.filter(d => d.isActive));
+        setPositions(positionsData.filter(p => p.isActive));
+      } catch (err: any) {
+        console.error('Failed to load reference data:', err);
+        setError('Failed to load departments and positions. Please refresh the page.');
+      } finally {
+        setLoadingRefData(false);
+      }
+    };
+    loadReferenceData();
+  }, []);
+
+  // Filter positions by selected department
+  useEffect(() => {
+    if (selectedDepartmentId) {
+      const filtered = positions.filter(p => p.departmentId === selectedDepartmentId);
+      setFilteredPositions(filtered);
+      // Reset position selection if current selection is not in filtered list
+      if (selectedPositionId && !filtered.find(p => p.id === selectedPositionId)) {
+        setSelectedPositionId('');
+      }
+    } else {
+      setFilteredPositions([]);
+      setSelectedPositionId('');
+    }
+    setSelectedSupervisorPositionId('');
+  }, [selectedDepartmentId, positions, selectedPositionId]);
 
   // Auto-hide toast after 3 seconds
   useEffect(() => {
@@ -101,7 +155,7 @@ export default function CreateEmployeePage() {
     setResult(null);
 
     try {
-      // Build payload, removing empty strings and converting to proper format
+      // Build payload for profile creation (without position/department assignment)
       const payload: CreateEmployeeProfileDto = {
         employeeNumber: form.employeeNumber.trim(),
         firstName: form.firstName.trim(),
@@ -118,29 +172,39 @@ export default function CreateEmployeePage() {
       };
 
       // Add optional fields only if they have values
-      if (form.positionTitle?.trim()) {
-        payload.positionTitle = form.positionTitle.trim();
-      }
-      if (form.departmentName?.trim()) {
-        payload.departmentName = form.departmentName.trim();
-      }
-      if (form.departmentCode?.trim()) {
-        payload.departmentCode = form.departmentCode.trim();
-      }
       if (form.payGradeId?.trim() && form.payGradeId.trim() !== 'optional') {
         payload.payGradeId = form.payGradeId.trim();
       }
 
+      // Create employee profile first
       const res = await api.post<EmployeeProfile>(
         "/employee-profile",
         payload
       );
       setResult(res.data);
-      setToast("Employee created successfully. Redirecting...");
+      
+      const employeeId = res.data._id || (res.data as any).id;
+
+      // If position and department are selected, assign them via separate endpoint
+      if (selectedDepartmentId && selectedPositionId && employeeId) {
+        try {
+          await employeesService.assignPositionDepartment(employeeId, {
+            primaryPositionId: selectedPositionId,
+            primaryDepartmentId: selectedDepartmentId,
+            supervisorPositionId: selectedSupervisorPositionId || undefined,
+          });
+          setToast("Employee profile created and position/department assigned successfully. Redirecting...");
+        } catch (assignErr: any) {
+          console.error('Error assigning position/department:', assignErr);
+          setToast("Employee profile created, but position/department assignment failed. You can assign it later.");
+          setError(assignErr?.response?.data?.message || 'Failed to assign position and department');
+        }
+      } else {
+        setToast("Employee created successfully. Redirecting...");
+      }
       
       // Redirect to employee details page after 1.5 seconds
       setTimeout(() => {
-        const employeeId = res.data._id || (res.data as any).id;
         if (employeeId) {
           router.push(`/employee-profile/${employeeId}`);
         } else {
@@ -414,49 +478,87 @@ export default function CreateEmployeePage() {
               </select>
             </div>
 
-            {/* Position / department */}
-            <div>
-              <label htmlFor="positionTitle" className="block text-sm font-medium text-gray-700 mb-1">
-                Position Title (optional)
-              </label>
-              <input
-                id="positionTitle"
-                name="positionTitle"
-                placeholder="Software Developer"
-                value={form.positionTitle || ""}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+            {/* Position & Department Assignment (HR Only) */}
+            <div className="col-span-2 border-t pt-4 mt-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Position & Department Assignment</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Assign position and department to the employee. This can only be done by HR Admin or HR Manager.
+              </p>
             </div>
 
-            <div>
-              <label htmlFor="departmentName" className="block text-sm font-medium text-gray-700 mb-1">
-                Department Name (optional)
-              </label>
-              <input
-                id="departmentName"
-                name="departmentName"
-                placeholder="IT"
-                value={form.departmentName || ""}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+            {loadingRefData ? (
+              <div className="col-span-2">
+                <Loading size="sm" text="Loading departments and positions..." />
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label htmlFor="departmentId" className="block text-sm font-medium text-gray-700 mb-1">
+                    Department *
+                  </label>
+                  <select
+                    id="departmentId"
+                    value={selectedDepartmentId}
+                    onChange={(e) => setSelectedDepartmentId(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required={!!selectedPositionId}
+                  >
+                    <option value="">Select Department</option>
+                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.name} ({dept.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            {/* Department code / pay grade */}
-            <div>
-              <label htmlFor="departmentCode" className="block text-sm font-medium text-gray-700 mb-1">
-                Department Code
-              </label>
-              <input
-                id="departmentCode"
-                name="departmentCode"
-                placeholder="DEPT-IT"
-                value={form.departmentCode || ""}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+                <div>
+                  <label htmlFor="positionId" className="block text-sm font-medium text-gray-700 mb-1">
+                    Position *
+                  </label>
+                  <select
+                    id="positionId"
+                    value={selectedPositionId}
+                    onChange={(e) => setSelectedPositionId(e.target.value)}
+                    disabled={!selectedDepartmentId}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    required={!!selectedDepartmentId}
+                  >
+                    <option value="">{selectedDepartmentId ? 'Select Position' : 'Select Department First'}</option>
+                    {filteredPositions.map((pos) => (
+                      <option key={pos.id} value={pos.id}>
+                        {pos.title} ({pos.positionId})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="supervisorPositionId" className="block text-sm font-medium text-gray-700 mb-1">
+                    Supervisor Position (Optional)
+                  </label>
+                  <select
+                    id="supervisorPositionId"
+                    value={selectedSupervisorPositionId}
+                    onChange={(e) => setSelectedSupervisorPositionId(e.target.value)}
+                    disabled={!selectedPositionId}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="">None</option>
+                    {positions
+                      .filter(p => p.id !== selectedPositionId && p.isActive)
+                      .map((pos) => (
+                        <option key={pos.id} value={pos.id}>
+                          {pos.title} ({pos.positionId})
+                        </option>
+                      ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Select the position that this employee will report to
+                  </p>
+                </div>
+              </>
+            )}
 
             <div>
               <label htmlFor="payGradeId" className="block text-sm font-medium text-gray-700 mb-1">
